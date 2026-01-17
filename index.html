@@ -4,6 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Local Layer Prints</title>
+
+  <!-- Simple lightning-bolt favicon (no extra files needed) -->
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%230b0f19'/%3E%3Cpath%20d='M36%204L12%2036h16l-6%2024%2030-36H36z'%20fill='%237c5cff'/%3E%3Cpath%20d='M32%2020L20%2036h10l-4%2016%2020-24H32z'%20fill='%2331d0aa'%20opacity='0.85'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#0b0f19" />
+
   <style>
     :root{
       --bg:#0b0f19;
@@ -35,7 +41,20 @@
       width:44px;height:44px;border-radius:14px;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       box-shadow: var(--shadow);
+      display:grid;
+      place-items:center;
+      position:relative;
+      overflow:hidden;
     }
+    .logo::before{
+      content:"⚡";
+      font-size:22px;
+      line-height:1;
+      color:#0b0f19;
+      text-shadow: 0 1px 0 rgba(255,255,255,.18);
+      transform: translateY(-1px);
+    }
+
     h1{font-size:22px;margin:0}
     .sub{color:var(--muted);font-size:14px;margin-top:2px}
     .pillrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
@@ -294,11 +313,6 @@
       text-align:center;
       padding:18px 0 30px;
     }
-    .smalllink{
-      opacity:.9;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
   </style>
 </head>
 <body>
@@ -423,7 +437,8 @@
     const COLOR_OPTIONS = ["Orange", "Blue", "Red", "Gold", "Grey"];
 
     // Capacity pricing for stands (3-6)
-    const CAPACITY_PRICE = { 3: 12, 4: 13, 5: 14, 6: 16 };
+    // (Changed 6 from $16 to $15 like you requested)
+    const CAPACITY_PRICE = { 3: 12, 4: 13, 5: 14, 6: 15 };
 
     // =========================
     // PRODUCTS
@@ -432,7 +447,7 @@
       {
         id: "stackable-glasses-stand",
         name: "Stackable Glasses Stand",
-        basePrice: null, // price comes from capacity
+        basePrice: null,
         category: "Organizers",
         tags: ["Stackable", "Glasses"],
         desc: "Choose a color + how many glasses it should hold (3–6).",
@@ -442,7 +457,7 @@
       {
         id: "stackable-shoe-stand",
         name: "Stackable Shoe Stand",
-        basePrice: null, // price comes from capacity
+        basePrice: null,
         category: "Organizers",
         tags: ["Stackable", "Shoes"],
         desc: "Choose a color + how many shoes it should hold (3–6).",
@@ -459,6 +474,19 @@
         images: ["1d694d1c-9bae-407b-9d25-91427a285def.png"],
         options: { color: true }
       },
+
+      <!-- NEW ITEM -->
+      {
+        id: "cascade-wallet",
+        name: "Cascade Style Wallet",
+        basePrice: 10,
+        category: "Everyday Carry",
+        tags: ["Wallet", "EDC"],
+        desc: "Cascade-style wallet. Choose a color.",
+        images: ["wallet.png"],
+        options: { color: true }
+      },
+
       {
         id: "custom-print-request",
         name: "Custom Print Request",
@@ -479,7 +507,7 @@
     const fmt = (n) => `$${(Math.round(n * 100) / 100).toFixed(2)}`;
 
     // key = id|color|capacity
-    const cart = new Map(); // key -> { id, qty, color, capacity, customNote }
+    const cart = new Map();
 
     function initShopUI(){
       $("#shopName").textContent = SHOP.name;
@@ -547,7 +575,6 @@
 
         const imgs = (p.images && p.images.length) ? p.images : [];
         const main = imgs[0] || "";
-
         const defaults = getDefaultOptionsForProduct(p);
 
         const capOptionsHtml = (p.options && p.options.capacity) ? `
@@ -678,7 +705,7 @@
       if(!p) return;
       let extra = "";
       if (p.options && p.options.capacity){
-        extra = `\nPricing:\n- 3 = $12\n- 4 = $13\n- 5 = $14\n- 6 = $16`;
+        extra = `\nPricing:\n- 3 = $12\n- 4 = $13\n- 5 = $14\n- 6 = $15`;
       }
       alert(`${p.name}\nCategory: ${p.category}\n${p.customRequest ? "Price: Quote" : "Price: " + (p.options && p.options.capacity ? "depends on capacity" : fmt(p.basePrice))}\n\n${p.desc}${extra}\n\nDelivery fee (if chosen): ${fmt(SHOP.deliveryFee)}`);
     }
@@ -706,9 +733,7 @@
       renderCart();
     }
 
-    function isDelivery(){
-      return $("#deliveryRadio").checked;
-    }
+    function isDelivery(){ return $("#deliveryRadio").checked; }
 
     function cartItems(){
       const items = [];
@@ -716,21 +741,12 @@
         const p = PRODUCTS.find(x => x.id === v.id);
         if(!p) continue;
         const unit = p.customRequest ? 0 : getUnitPrice(p, v);
-        items.push({
-          key,
-          ...v,
-          name: p.name,
-          category: p.category,
-          isCustom: !!p.customRequest,
-          unitPrice: unit
-        });
+        items.push({ key, ...v, name: p.name, category: p.category, isCustom: !!p.customRequest, unitPrice: unit });
       }
       return items.sort((a,b)=>a.name.localeCompare(b.name));
     }
 
-    function calcSubtotal(){
-      return cartItems().reduce((sum, it) => sum + (it.isCustom ? 0 : (it.unitPrice * it.qty)), 0);
-    }
+    function calcSubtotal(){ return cartItems().reduce((sum, it) => sum + (it.isCustom ? 0 : (it.unitPrice * it.qty)), 0); }
 
     function calcTotal(){
       const subtotal = calcSubtotal();
@@ -750,8 +766,6 @@
     function updateCartOption(key, field, value){
       const it = cart.get(key);
       if(!it) return;
-      const p = PRODUCTS.find(x => x.id === it.id);
-      if(!p) return;
 
       const newColor = (field === "color") ? value : it.color;
       const newCap = (field === "capacity") ? value : it.capacity;
@@ -785,6 +799,15 @@
     function getCapacityLabelFor(productId){
       const p = PRODUCTS.find(x => x.id === productId);
       return p?.options?.capacityLabel || "Holds";
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
     }
 
     function renderCart(){
@@ -944,14 +967,12 @@ When can we meet / deliver?`;
     }
 
     function emailOrder(){
-      const msg = buildOrderMessage(); // ensures message is generated
+      const msg = buildOrderMessage();
       if(!msg || msg.startsWith("Cart is empty")) return;
 
       const subject = encodeURIComponent(SHOP.orderEmailSubject);
       const body = encodeURIComponent(msg);
       const to = encodeURIComponent(SHOP.orderEmailTo);
-
-      // Opens default mail client (Gmail app / Mail / Outlook etc depending on device)
       window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
     }
 
@@ -985,15 +1006,6 @@ When can we meet / deliver?`;
 
       initShopUI();
       renderCart();
-    }
-
-    function escapeHtml(str){
-      return String(str)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
     }
 
     // Events
