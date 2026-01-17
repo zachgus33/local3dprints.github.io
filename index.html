@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Local Layer Prints</title>
+  <style>
+    :root{
+      --bg:#0b0f19;
+      --text:#e8eefc;
+      --muted:#a9b4d6;
+      --accent:#7c5cff;
+      --accent2:#31d0aa;
+      --danger:#ff5c7a;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(124,92,255,.25), transparent 60%),
+                  radial-gradient(900px 500px at 80% 10%, rgba(49,208,170,.20), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+    }
+    a{color:inherit}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    header{
+      display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+      padding:22px 0 10px;
+    }
+    .brand{display:flex;align-items:center;gap:12px;}
+    .logo{
+      width:44px;height:44px;border-radius:14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: var(--shadow);
+    }
+    h1{font-size:22px;margin:0}
+    .sub{color:var(--muted);font-size:14px;margin-top:2px}
+    .pillrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .pill{
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      padding:10px 12px;border-radius:999px;
+      display:flex;gap:10px;align-items:center;
+      backdrop-filter: blur(10px);
+    }
+    .pill strong{font-weight:1000}
+    .btn{
+      border:0;
+      background: linear-gradient(135deg, var(--accent), #5a8bff);
+      color:white;
+      padding:10px 14px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight:1000;
+      box-shadow: var(--shadow);
+      transition: transform .12s ease, opacity .12s ease;
+    }
+    .btn:active{transform: translateY(1px)}
+    .btn.secondary{
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:none;
+      font-weight:900;
+    }
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.6fr .9fr;
+      gap:18px;
+      align-items:start;
+    }
+    @media (max-width: 900px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .inner{padding:16px}
+
+    .toolbar{
+      display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+    }
+    .search{
+      flex:1;
+      min-width: 220px;
+      display:flex;gap:10px;align-items:center;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      padding:10px 12px;border-radius: 14px;
+    }
+    input, textarea, select{
+      width:100%;
+      background: transparent;
+      border:0;
+      outline:0;
+      color:var(--text);
+      font-size:14px;
+    }
+    textarea{
+      min-height: 110px;
+      resize: vertical;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding:10px 12px;
+    }
+    select{
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding:10px 12px;
+      width:auto;
+    }
+
+    .products{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:14px;
+      margin-top:14px;
+    }
+    @media (max-width: 620px){
+      .products{grid-template-columns:1fr}
+    }
+
+    .p{
+      background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.10));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height: 390px;
+    }
+
+    .media{
+      padding:12px 12px 0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .mainimg{
+      width:100%;
+      height:170px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+      background: rgba(255,255,255,.03);
+    }
+    .mainimg img{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:block;
+    }
+
+    .thumbs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .thumbbtn{
+      width:64px;height:44px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      overflow:hidden;
+      padding:0;
+      cursor:pointer;
+    }
+    .thumbbtn img{
+      width:100%;height:100%;
+      object-fit:cover;
+      display:block;
+      opacity:.95;
+    }
+    .thumbbtn.active{
+      outline: 2px solid rgba(124,92,255,.85);
+      border-color: rgba(124,92,255,.45);
+    }
+
+    .content{padding:12px;display:flex;flex-direction:column;gap:8px;flex:1}
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .muted{color:var(--muted);font-size:13px;line-height:1.35}
+    .price{font-weight:1100;font-size:16px}
+    .tiny{font-size:12px;color:var(--muted)}
+    .tag{
+      font-size:12px;
+      color: rgba(255,255,255,.92);
+      background: rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.12);
+      padding:6px 10px;border-radius:999px;
+    }
+    .tagrow{display:flex;gap:8px;flex-wrap:wrap}
+
+    .options{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:4px;
+    }
+    .opt{
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding:10px 12px;
+    }
+    .opt label{
+      display:block;
+      font-size:12px;
+      color: var(--muted);
+      margin-bottom:6px;
+    }
+    .opt select, .opt input{
+      width:100%;
+      padding:8px 10px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+    }
+    .opt.full{grid-column: 1 / -1;}
+
+    .actions{display:flex;gap:10px;margin-top:auto}
+    .actions .btn{flex:1}
+    .actions .btn.secondary{flex:1}
+
+    .side h2{margin:0 0 10px;font-size:16px}
+    .hr{height:1px;background: rgba(255,255,255,.10);margin:12px 0}
+    .cartline{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+      padding:10px 0;
+      border-bottom: 1px dashed rgba(255,255,255,.14);
+    }
+    .cartline:last-child{border-bottom:0}
+    .qty{
+      display:flex;align-items:center;gap:8px;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      padding:6px 8px;border-radius:12px;
+      margin-top:2px;
+    }
+    .qty button{
+      width:28px;height:28px;border-radius:10px;border:0;
+      background: rgba(255,255,255,.10);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:1100;
+    }
+    .cartopts{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+    .cartopts select, .cartopts input{
+      padding:8px 10px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      width:auto;
+      max-width: 100%;
+    }
+
+    .total{
+      display:flex;align-items:center;justify-content:space-between;
+      font-size:16px;font-weight:1100;
+      padding-top:8px;
+    }
+    .notice{
+      background: rgba(49,208,170,.12);
+      border:1px solid rgba(49,208,170,.35);
+      padding:10px 12px;border-radius:14px;
+      color: rgba(232,238,252,.95);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .danger{
+      background: rgba(255,92,122,.10);
+      border:1px solid rgba(255,92,122,.30);
+    }
+    .toggle{display:flex;align-items:center;gap:10px;}
+    .toggle input{width:auto}
+    footer{
+      color: var(--muted);
+      font-size:12px;
+      text-align:center;
+      padding:18px 0 30px;
+    }
+    .smalllink{
+      opacity:.9;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1 id="shopName">Local Layer Prints</h1>
+          <div class="sub" id="shopTagline">Local pickup or delivery</div>
+        </div>
+      </div>
+
+      <div class="pillrow">
+        <div class="pill">
+          <span>Delivery fee:</span>
+          <strong id="deliveryFeeLabel">$3.00</strong>
+        </div>
+        <button class="btn secondary" id="editShopBtn">Edit shop info</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT -->
+      <section class="card">
+        <div class="inner">
+          <div class="toolbar">
+            <div class="search" title="Search listings">
+              <span style="opacity:.8">🔎</span>
+              <input id="searchInput" placeholder="Search prints..." />
+            </div>
+
+            <select id="categoryFilter" title="Filter category">
+              <option value="all">All</option>
+            </select>
+          </div>
+
+          <div class="products" id="productGrid"></div>
+        </div>
+      </section>
+
+      <!-- RIGHT -->
+      <aside class="card side">
+        <div class="inner">
+          <h2>Your order</h2>
+          <div class="tiny">Pick options (color/capacity), add items, then send the request.</div>
+
+          <div class="hr"></div>
+
+          <div class="toggle">
+            <input type="radio" name="fulfillment" id="pickupRadio" checked />
+            <label for="pickupRadio"><strong>Pickup</strong> (free)</label>
+          </div>
+          <div class="toggle" style="margin-top:8px;">
+            <input type="radio" name="fulfillment" id="deliveryRadio" />
+            <label for="deliveryRadio"><strong>Delivery</strong> (+<span id="deliveryFeeInline">$3.00</span>)</label>
+          </div>
+
+          <div class="hr"></div>
+
+          <div id="cartEmpty" class="notice danger">
+            Your cart is empty. Add a print to start an order.
+          </div>
+
+          <div id="cartLines"></div>
+
+          <div class="hr"></div>
+
+          <div class="total">
+            <span>Total</span>
+            <span id="totalPrice">$0.00</span>
+          </div>
+          <div class="tiny" id="totalNote" style="margin-top:6px;">
+            Delivery fee is added only if you select delivery.
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="row" style="gap:12px;">
+            <button class="btn" id="buildMessageBtn">Build order message</button>
+            <button class="btn secondary" id="emailBtn">Email order</button>
+            <button class="btn secondary" id="clearCartBtn">Clear</button>
+          </div>
+
+          <div style="margin-top:12px;">
+            <div class="tiny" style="margin-bottom:6px;">Customer name + address (optional)</div>
+            <input id="customerName" placeholder="Name (optional)" style="background: rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.10); padding:10px 12px; border-radius:14px;" />
+            <div style="height:8px;"></div>
+            <input id="customerAddress" placeholder="Address / meetup spot (optional)" style="background: rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.10); padding:10px 12px; border-radius:14px;" />
+            <div style="height:10px;"></div>
+            <textarea id="messageBox" placeholder="Click “Build order message” to generate a text you can send in DM…"></textarea>
+            <div class="row" style="margin-top:10px;">
+              <button class="btn secondary" id="copyBtn">Copy</button>
+            </div>
+            <div class="tiny" style="margin-top:8px;opacity:.95">
+              You can paste this into Marketplace/Nextdoor/text — or hit “Email order”.
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      © <span id="year"></span> <span id="shopNameFooter">Local Layer Prints</span> • Local pickup/delivery only
+    </footer>
+  </div>
+
+  <script>
+    // =========================
+    // SHOP SETTINGS
+    // =========================
+    const SHOP = {
+      name: "Local Layer Prints",
+      tagline: "Local pickup or delivery",
+      deliveryFee: 3,
+      neighborhood: "Local area",
+      orderEmailTo: "zacharygustafson99@gmail.com",
+      orderEmailSubject: "Order request The Local Layer"
+    };
+
+    // Color options (allowed)
+    const COLOR_OPTIONS = ["Orange", "Blue", "Red", "Gold", "Grey"];
+
+    // Capacity pricing for stands (3-6)
+    const CAPACITY_PRICE = { 3: 12, 4: 13, 5: 14, 6: 16 };
+
+    // =========================
+    // PRODUCTS
+    // =========================
+    const PRODUCTS = [
+      {
+        id: "stackable-glasses-stand",
+        name: "Stackable Glasses Stand",
+        basePrice: null, // price comes from capacity
+        category: "Organizers",
+        tags: ["Stackable", "Glasses"],
+        desc: "Choose a color + how many glasses it should hold (3–6).",
+        images: ["A_digital_photograph_features_three_stackable_glas.png"],
+        options: { color: true, capacity: [3,4,5,6], capacityLabel: "Holds (glasses)" }
+      },
+      {
+        id: "stackable-shoe-stand",
+        name: "Stackable Shoe Stand",
+        basePrice: null, // price comes from capacity
+        category: "Organizers",
+        tags: ["Stackable", "Shoes"],
+        desc: "Choose a color + how many shoes it should hold (3–6).",
+        images: ["716A1B70-A21F-400E-97BF-6E5DA267601F.jpeg","2EF0535B-7EE6-41F1-9DC1-18F8EEDDC185.jpeg"],
+        options: { color: true, capacity: [3,4,5,6], capacityLabel: "Holds (shoes)" }
+      },
+      {
+        id: "scrub-daddy-holder",
+        name: "Scrub Daddy Holder",
+        basePrice: 5,
+        category: "Kitchen",
+        tags: ["Sink", "Holder"],
+        desc: "Choose a color. Keeps your scrubber off the counter and helps it dry out.",
+        images: ["1d694d1c-9bae-407b-9d25-91427a285def.png"],
+        options: { color: true }
+      },
+      {
+        id: "custom-print-request",
+        name: "Custom Print Request",
+        basePrice: 0,
+        category: "Custom",
+        tags: ["Custom", "Quote"],
+        desc: "Request something custom. Add this and describe what you want (size, purpose, pictures/links).",
+        images: [],
+        customRequest: true,
+        options: { color: true }
+      }
+    ];
+
+    // =========================
+    // APP LOGIC
+    // =========================
+    const $ = (sel) => document.querySelector(sel);
+    const fmt = (n) => `$${(Math.round(n * 100) / 100).toFixed(2)}`;
+
+    // key = id|color|capacity
+    const cart = new Map(); // key -> { id, qty, color, capacity, customNote }
+
+    function initShopUI(){
+      $("#shopName").textContent = SHOP.name;
+      $("#shopNameFooter").textContent = SHOP.name;
+      $("#shopTagline").textContent = SHOP.tagline;
+      $("#deliveryFeeLabel").textContent = fmt(SHOP.deliveryFee);
+      $("#deliveryFeeInline").textContent = fmt(SHOP.deliveryFee);
+      $("#year").textContent = new Date().getFullYear();
+    }
+
+    function categoriesFromProducts(){
+      const set = new Set(PRODUCTS.map(p => p.category));
+      return ["all", ...Array.from(set).sort((a,b)=>a.localeCompare(b))];
+    }
+
+    function renderCategoryOptions(){
+      const cats = categoriesFromProducts();
+      const sel = $("#categoryFilter");
+      sel.innerHTML = "";
+      cats.forEach(c => {
+        const o = document.createElement("option");
+        o.value = c;
+        o.textContent = c === "all" ? "All" : c;
+        sel.appendChild(o);
+      });
+    }
+
+    function filteredProducts(){
+      const q = $("#searchInput").value.trim().toLowerCase();
+      const cat = $("#categoryFilter").value;
+      return PRODUCTS.filter(p => {
+        const matchesQ = !q || (p.name + " " + p.desc + " " + (p.tags||[]).join(" ")).toLowerCase().includes(q);
+        const matchesCat = cat === "all" || p.category === cat;
+        return matchesQ && matchesCat;
+      });
+    }
+
+    function getDefaultOptionsForProduct(p){
+      const color = (p.options && p.options.color) ? COLOR_OPTIONS[0] : null;
+      const capacity = (p.options && p.options.capacity) ? p.options.capacity[0] : null;
+      const customNote = p.customRequest ? "" : null;
+      return { color, capacity, customNote };
+    }
+
+    function getUnitPrice(p, opts){
+      if (p.options && p.options.capacity){
+        const cap = Number(opts.capacity);
+        return CAPACITY_PRICE[cap] ?? 0;
+      }
+      return Number(p.basePrice ?? 0);
+    }
+
+    function makeCartKey(id, color, capacity){
+      return `${id}|${color || ""}|${capacity || ""}`;
+    }
+
+    function renderProducts(){
+      const grid = $("#productGrid");
+      grid.innerHTML = "";
+      const list = filteredProducts();
+
+      list.forEach(p => {
+        const el = document.createElement("div");
+        el.className = "p";
+
+        const imgs = (p.images && p.images.length) ? p.images : [];
+        const main = imgs[0] || "";
+
+        const defaults = getDefaultOptionsForProduct(p);
+
+        const capOptionsHtml = (p.options && p.options.capacity) ? `
+          <div class="opt">
+            <label>${p.options.capacityLabel || "Holds"}</label>
+            <select data-opt-capacity="${p.id}">
+              ${p.options.capacity.map(c => `<option value="${c}">${c} (${fmt(CAPACITY_PRICE[c])})</option>`).join("")}
+            </select>
+          </div>
+        ` : "";
+
+        const colorHtml = (p.options && p.options.color) ? `
+          <div class="opt">
+            <label>Color</label>
+            <select data-opt-color="${p.id}">
+              ${COLOR_OPTIONS.map(c => `<option value="${c}">${c}</option>`).join("")}
+            </select>
+          </div>
+        ` : "";
+
+        const optionsGrid = (capOptionsHtml || colorHtml) ? `
+          <div class="options">
+            ${colorHtml}
+            ${capOptionsHtml}
+            ${p.customRequest ? `
+              <div class="opt full">
+                <label>Custom request details (optional)</label>
+                <input data-opt-customnote="${p.id}" placeholder="What do you want printed? Size? Purpose? Any link?" />
+              </div>
+            ` : ""}
+          </div>
+        ` : "";
+
+        const priceLabel = p.customRequest ? "Quote" : fmt(getUnitPrice(p, defaults));
+
+        el.innerHTML = `
+          <div class="media">
+            <div class="mainimg">
+              ${main ? `<img src="${main}" alt="${p.name}" data-main="${p.id}">`
+                    : `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);font-size:13px;border:1px dashed rgba(255,255,255,.14);border-radius:14px;">
+                        No photo
+                      </div>`}
+            </div>
+            <div class="thumbs">
+              ${imgs.map((src, i) => `
+                <button class="thumbbtn ${i===0 ? "active":""}" data-thumb="${p.id}" data-src="${src}" aria-label="view photo ${i+1}">
+                  <img src="${src}" alt="${p.name} photo ${i+1}">
+                </button>
+              `).join("")}
+            </div>
+          </div>
+
+          <div class="content">
+            <div class="row">
+              <h3 style="margin:0;font-size:16px">${p.name}</h3>
+              <div class="price" data-price-label="${p.id}">${priceLabel}</div>
+            </div>
+
+            <div class="tagrow">
+              ${(p.tags||[]).slice(0,4).map(t => `<span class="tag">${t}</span>`).join("")}
+            </div>
+
+            <div class="muted">${p.desc}</div>
+
+            ${optionsGrid}
+
+            <div class="row">
+              <div class="tiny">Category: ${p.category}</div>
+              <div class="tiny">Local only</div>
+            </div>
+
+            <div class="actions">
+              <button class="btn" data-add="${p.id}">${p.customRequest ? "Request" : "Add"}</button>
+              <button class="btn secondary" data-details="${p.id}">Details</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(el);
+
+        if (p.options && p.options.color){
+          const sel = grid.querySelector(`select[data-opt-color="${p.id}"]`);
+          if (sel) sel.value = defaults.color;
+        }
+        if (p.options && p.options.capacity){
+          const sel = grid.querySelector(`select[data-opt-capacity="${p.id}"]`);
+          if (sel) sel.value = String(defaults.capacity);
+        }
+      });
+
+      grid.querySelectorAll("[data-add]").forEach(btn => {
+        btn.addEventListener("click", () => addToCartFromCard(btn.getAttribute("data-add")));
+      });
+
+      grid.querySelectorAll("[data-details]").forEach(btn => {
+        btn.addEventListener("click", () => showDetails(btn.getAttribute("data-details")));
+      });
+
+      grid.querySelectorAll("[data-thumb]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-thumb");
+          const src = btn.getAttribute("data-src");
+          const main = grid.querySelector(`img[data-main="${id}"]`);
+          if(main) main.src = src;
+
+          grid.querySelectorAll(`button[data-thumb="${id}"]`).forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+        });
+      });
+
+      grid.querySelectorAll('select[data-opt-capacity]').forEach(sel => {
+        sel.addEventListener("change", () => {
+          const id = sel.getAttribute("data-opt-capacity");
+          const p = PRODUCTS.find(x => x.id === id);
+          if(!p || p.customRequest) return;
+
+          const colorSel = grid.querySelector(`select[data-opt-color="${id}"]`);
+          const capSel = grid.querySelector(`select[data-opt-capacity="${id}"]`);
+          const opts = { color: colorSel ? colorSel.value : null, capacity: capSel ? capSel.value : null };
+
+          const label = grid.querySelector(`[data-price-label="${id}"]`);
+          if(label) label.textContent = fmt(getUnitPrice(p, opts));
+        });
+      });
+    }
+
+    function showDetails(id){
+      const p = PRODUCTS.find(x => x.id === id);
+      if(!p) return;
+      let extra = "";
+      if (p.options && p.options.capacity){
+        extra = `\nPricing:\n- 3 = $12\n- 4 = $13\n- 5 = $14\n- 6 = $16`;
+      }
+      alert(`${p.name}\nCategory: ${p.category}\n${p.customRequest ? "Price: Quote" : "Price: " + (p.options && p.options.capacity ? "depends on capacity" : fmt(p.basePrice))}\n\n${p.desc}${extra}\n\nDelivery fee (if chosen): ${fmt(SHOP.deliveryFee)}`);
+    }
+
+    function addToCartFromCard(id){
+      const p = PRODUCTS.find(x => x.id === id);
+      if(!p) return;
+
+      const colorSel = document.querySelector(`select[data-opt-color="${id}"]`);
+      const capSel = document.querySelector(`select[data-opt-capacity="${id}"]`);
+      const noteInp = document.querySelector(`input[data-opt-customnote="${id}"]`);
+
+      const color = (colorSel && p.options && p.options.color) ? colorSel.value : null;
+      const capacity = (capSel && p.options && p.options.capacity) ? capSel.value : null;
+      const customNote = (p.customRequest && noteInp) ? (noteInp.value.trim() || "") : null;
+
+      const key = makeCartKey(id, color, capacity);
+      const existing = cart.get(key);
+      if(existing){
+        existing.qty += 1;
+        if (p.customRequest && customNote) existing.customNote = customNote;
+      }else{
+        cart.set(key, { id, qty: 1, color, capacity, customNote });
+      }
+      renderCart();
+    }
+
+    function isDelivery(){
+      return $("#deliveryRadio").checked;
+    }
+
+    function cartItems(){
+      const items = [];
+      for (const [key, v] of cart.entries()){
+        const p = PRODUCTS.find(x => x.id === v.id);
+        if(!p) continue;
+        const unit = p.customRequest ? 0 : getUnitPrice(p, v);
+        items.push({
+          key,
+          ...v,
+          name: p.name,
+          category: p.category,
+          isCustom: !!p.customRequest,
+          unitPrice: unit
+        });
+      }
+      return items.sort((a,b)=>a.name.localeCompare(b.name));
+    }
+
+    function calcSubtotal(){
+      return cartItems().reduce((sum, it) => sum + (it.isCustom ? 0 : (it.unitPrice * it.qty)), 0);
+    }
+
+    function calcTotal(){
+      const subtotal = calcSubtotal();
+      const delivery = (isDelivery() && cart.size > 0) ? SHOP.deliveryFee : 0;
+      return subtotal + delivery;
+    }
+
+    function setQty(key, qty){
+      if(qty <= 0) cart.delete(key);
+      else {
+        const it = cart.get(key);
+        if(it) it.qty = qty;
+      }
+      renderCart();
+    }
+
+    function updateCartOption(key, field, value){
+      const it = cart.get(key);
+      if(!it) return;
+      const p = PRODUCTS.find(x => x.id === it.id);
+      if(!p) return;
+
+      const newColor = (field === "color") ? value : it.color;
+      const newCap = (field === "capacity") ? value : it.capacity;
+      const newKey = makeCartKey(it.id, newColor, newCap);
+
+      if(newKey === key){
+        it[field] = value;
+        renderCart();
+        return;
+      }
+
+      const moved = { ...it, color: newColor, capacity: newCap };
+      cart.delete(key);
+
+      if(cart.has(newKey)){
+        const target = cart.get(newKey);
+        target.qty += moved.qty;
+        if(moved.customNote && !target.customNote) target.customNote = moved.customNote;
+      }else{
+        cart.set(newKey, moved);
+      }
+      renderCart();
+    }
+
+    function updateCustomNote(key, value){
+      const it = cart.get(key);
+      if(!it) return;
+      it.customNote = value;
+    }
+
+    function getCapacityLabelFor(productId){
+      const p = PRODUCTS.find(x => x.id === productId);
+      return p?.options?.capacityLabel || "Holds";
+    }
+
+    function renderCart(){
+      const linesEl = $("#cartLines");
+      const emptyEl = $("#cartEmpty");
+      const totalEl = $("#totalPrice");
+
+      const items = cartItems();
+      linesEl.innerHTML = "";
+      emptyEl.style.display = items.length ? "none" : "block";
+
+      items.forEach(it => {
+        const p = PRODUCTS.find(x => x.id === it.id);
+        const needsColor = p?.options?.color;
+        const needsCap = p?.options?.capacity;
+
+        const unitLabel = it.isCustom ? "Quote" : fmt(it.unitPrice);
+        const capLabel = getCapacityLabelFor(it.id);
+
+        const line = document.createElement("div");
+        line.className = "cartline";
+        line.innerHTML = `
+          <div style="min-width:0;flex:1">
+            <div style="font-weight:1100">${it.name}</div>
+            <div class="tiny">
+              ${it.isCustom ? "Quote" : `${unitLabel} each`} • ${it.category}
+              ${needsCap ? ` • ${capLabel}: ${it.capacity}` : ""}
+              ${needsColor ? ` • Color: ${it.color}` : ""}
+            </div>
+
+            <div class="cartopts">
+              ${needsColor ? `
+                <select data-cart-color="${it.key}">
+                  ${COLOR_OPTIONS.map(c => `<option value="${c}" ${c===it.color ? "selected":""}>${c}</option>`).join("")}
+                </select>
+              ` : ""}
+
+              ${needsCap ? `
+                <select data-cart-capacity="${it.key}">
+                  ${[3,4,5,6].map(c => `<option value="${c}" ${String(c)===String(it.capacity) ? "selected":""}>${c} (${fmt(CAPACITY_PRICE[c])})</option>`).join("")}
+                </select>
+              ` : ""}
+            </div>
+
+            ${it.isCustom ? `
+              <div style="margin-top:8px;">
+                <div class="tiny" style="margin-bottom:6px;">Custom request details</div>
+                <input data-cart-customnote="${it.key}" value="${escapeHtml(it.customNote || "")}"
+                       placeholder="Describe what you want printed (size, purpose, links)..." />
+              </div>
+            ` : ""}
+
+          </div>
+
+          <div class="qty">
+            <button aria-label="decrease" data-qty-minus="${it.key}">−</button>
+            <strong>${it.qty}</strong>
+            <button aria-label="increase" data-qty-plus="${it.key}">+</button>
+          </div>
+        `;
+        linesEl.appendChild(line);
+      });
+
+      linesEl.querySelectorAll("[data-qty-minus]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const key = btn.getAttribute("data-qty-minus");
+          const it = cart.get(key);
+          if(it) setQty(key, it.qty - 1);
+        });
+      });
+      linesEl.querySelectorAll("[data-qty-plus]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const key = btn.getAttribute("data-qty-plus");
+          const it = cart.get(key);
+          if(it) setQty(key, it.qty + 1);
+        });
+      });
+
+      linesEl.querySelectorAll("select[data-cart-color]").forEach(sel => {
+        sel.addEventListener("change", () => {
+          const key = sel.getAttribute("data-cart-color");
+          updateCartOption(key, "color", sel.value);
+        });
+      });
+      linesEl.querySelectorAll("select[data-cart-capacity]").forEach(sel => {
+        sel.addEventListener("change", () => {
+          const key = sel.getAttribute("data-cart-capacity");
+          updateCartOption(key, "capacity", sel.value);
+        });
+      });
+
+      linesEl.querySelectorAll("input[data-cart-customnote]").forEach(inp => {
+        inp.addEventListener("input", () => {
+          const key = inp.getAttribute("data-cart-customnote");
+          updateCustomNote(key, inp.value);
+        });
+      });
+
+      if(items.length){
+        const deliveryRow = document.createElement("div");
+        deliveryRow.className = "cartline";
+        const fee = (isDelivery() ? SHOP.deliveryFee : 0);
+        deliveryRow.innerHTML = `
+          <div style="min-width:0">
+            <div style="font-weight:1100">${isDelivery() ? "Delivery" : "Pickup"}</div>
+            <div class="tiny">${isDelivery() ? "Local delivery fee" : "No fee"}</div>
+          </div>
+          <div style="font-weight:1100">${fmt(fee)}</div>
+        `;
+        linesEl.appendChild(deliveryRow);
+      }
+
+      totalEl.textContent = fmt(calcTotal());
+    }
+
+    function buildOrderMessage(){
+      const items = cartItems();
+      const msgBox = $("#messageBox");
+      if(!items.length){
+        msgBox.value = "Cart is empty — add a print first.";
+        return "";
+      }
+
+      const name = $("#customerName").value.trim();
+      const addr = $("#customerAddress").value.trim();
+      const fulfill = isDelivery() ? `Delivery (+${fmt(SHOP.deliveryFee)})` : "Pickup (free)";
+      const subtotal = calcSubtotal();
+      const total = calcTotal();
+
+      const lines = items.map(it => {
+        const parts = [];
+        parts.push(`${it.name}`);
+        if(it.color) parts.push(`Color: ${it.color}`);
+        if(it.capacity) parts.push(`${getCapacityLabelFor(it.id)}: ${it.capacity}`);
+        parts.push(`Qty: ${it.qty}`);
+        parts.push(it.isCustom ? `Price: Quote` : `Unit: ${fmt(it.unitPrice)}`);
+        if(it.isCustom && it.customNote) parts.push(`Details: ${it.customNote}`);
+        return `- ${parts.join(" | ")}`;
+      }).join("\n");
+
+      const msg =
+`Hi! I'd like to order from ${SHOP.name}:
+
+${lines}
+
+Fulfillment: ${fulfill}
+Subtotal (priced items): ${fmt(subtotal)}
+Total: ${fmt(total)}${isDelivery() ? " (includes delivery fee)" : ""}
+
+${name ? "Name: " + name + "\n" : ""}${addr ? "Address/Meetup: " + addr + "\n" : ""}
+Area: ${SHOP.neighborhood}
+
+When can we meet / deliver?`;
+
+      msgBox.value = msg;
+      return msg;
+    }
+
+    function emailOrder(){
+      const msg = buildOrderMessage(); // ensures message is generated
+      if(!msg || msg.startsWith("Cart is empty")) return;
+
+      const subject = encodeURIComponent(SHOP.orderEmailSubject);
+      const body = encodeURIComponent(msg);
+      const to = encodeURIComponent(SHOP.orderEmailTo);
+
+      // Opens default mail client (Gmail app / Mail / Outlook etc depending on device)
+      window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+    }
+
+    function copyMessage(){
+      const text = $("#messageBox").value;
+      if(!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        $("#copyBtn").textContent = "Copied!";
+        setTimeout(()=> $("#copyBtn").textContent = "Copy", 900);
+      });
+    }
+
+    function clearCart(){
+      cart.clear();
+      renderCart();
+      $("#messageBox").value = "";
+    }
+
+    function editShopInfo(){
+      const name = prompt("Shop name:", SHOP.name);
+      if(name !== null && name.trim()) SHOP.name = name.trim();
+
+      const tag = prompt("Tagline:", SHOP.tagline);
+      if(tag !== null && tag.trim()) SHOP.tagline = tag.trim();
+
+      const fee = prompt("Delivery fee (number):", SHOP.deliveryFee);
+      if(fee !== null && fee.trim() && !Number.isNaN(Number(fee))) SHOP.deliveryFee = Number(fee);
+
+      const area = prompt("Your area/neighborhood text:", SHOP.neighborhood);
+      if(area !== null && area.trim()) SHOP.neighborhood = area.trim();
+
+      initShopUI();
+      renderCart();
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // Events
+    $("#searchInput").addEventListener("input", renderProducts);
+    $("#categoryFilter").addEventListener("change", renderProducts);
+    $("#pickupRadio").addEventListener("change", renderCart);
+    $("#deliveryRadio").addEventListener("change", renderCart);
+    $("#buildMessageBtn").addEventListener("click", buildOrderMessage);
+    $("#emailBtn").addEventListener("click", emailOrder);
+    $("#copyBtn").addEventListener("click", copyMessage);
+    $("#clearCartBtn").addEventListener("click", clearCart);
+    $("#editShopBtn").addEventListener("click", editShopInfo);
+
+    // Init
+    initShopUI();
+    renderCategoryOptions();
+    renderProducts();
+    renderCart();
+  </script>
+</body>
+</html>
+
