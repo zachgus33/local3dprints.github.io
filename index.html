@@ -802,7 +802,13 @@
 
     $("#buildMessageBtn").onclick = buildOrderMessage;
     $("#emailBtn").onclick = emailOrder;
-    $("#clearCartBtn").onclick = ()=>{ cart.clear(); renderCart(); };
+    $("#clearCartBtn").onclick = () => {
+  cart.clear();
+  $("#messageBox").value = "";
+  $("#customerName").value = "";
+  $("#customerAddress").value = "";
+  renderCart();
+};
     $("#copyBtn").onclick = ()=>navigator.clipboard.writeText($("#messageBox").value);
 
     $("#pickupRadio").onchange = renderCart;
