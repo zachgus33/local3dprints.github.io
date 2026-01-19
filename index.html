@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -396,10 +395,11 @@
           <div class="hr"></div>
 
           <div class="row" style="gap:12px;">
-            <button class="btn" id="buildMessageBtn">Build order message</button>
+            <button class="btn" id="submitOrderBtn">Submit order</button>
             <button class="btn secondary" id="emailBtn">Email order</button>
             <button class="btn secondary" id="clearCartBtn">Clear</button>
           </div>
+          <div class="tiny" id="submitStatus" style="margin-top:8px;opacity:.95;"></div>
 
           <div style="margin-top:12px;">
             <div class="tiny" style="margin-bottom:6px;">Customer name + address (optional)</div>
@@ -1060,6 +1060,7 @@ When can we meet / deliver?`;
     $("#pickupRadio").addEventListener("change", renderCart);
     $("#deliveryRadio").addEventListener("change", renderCart);
     $("#buildMessageBtn").addEventListener("click", buildOrderMessage);
+    $("#submitOrderBtn").addEventListener("click", submitOrderToGoogleForm);
     $("#emailBtn").addEventListener("click", emailOrder);
     $("#copyBtn").addEventListener("click", copyMessage);
     $("#clearCartBtn").addEventListener("click", clearCart);
@@ -1070,5 +1071,6 @@ When can we meet / deliver?`;
     renderProducts();
     renderCart();
   </script>
+  <script src="submit.js"></script>
 </body>
 </html>
