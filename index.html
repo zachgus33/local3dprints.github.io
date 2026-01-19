@@ -1,125 +1,823 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Local Layer Prints</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Local Layer Prints</title>
 
-<link rel="icon" type="image/svg+xml"
-href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0f19'/%3E%3Cpath d='M36 4L12 36h16l-6 24 30-36H36z' fill='%237c5cff'/%3E%3C/svg%3E">
+  <!-- Favicon (inline SVG lightning bolt) -->
+  <link rel="icon" type="image/svg+xml"
+    href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%230b0f19"/><path d="M36 6L14 36h16l-2 22 22-30H34l2-22z" fill="%237c5cff"/></svg>' />
 
-<style>
-body{margin:0;font-family:system-ui;background:#0b0f19;color:#e8eefc}
-.wrap{max-width:1100px;margin:auto;padding:20px}
-.card{background:#11182a;border-radius:16px;padding:16px;margin-bottom:16px}
-.btn{background:#7c5cff;color:#fff;border:0;padding:10px 14px;border-radius:12px;cursor:pointer}
-.btn.secondary{background:#222}
-select,input,textarea{width:100%;padding:8px;border-radius:10px;border:1px solid #333;background:#0b0f19;color:#fff}
-.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
-.price{font-weight:900}
-</style>
+  <style>
+    :root{
+      --bg:#0b0f19;
+      --text:#e8eefc;
+      --muted:#a9b4d6;
+      --accent:#7c5cff;
+      --accent2:#31d0aa;
+      --danger:#ff5c7a;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(124,92,255,.25), transparent 60%),
+                  radial-gradient(900px 500px at 80% 10%, rgba(49,208,170,.20), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+    }
+    a{color:inherit}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    header{
+      display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+      padding:22px 0 10px;
+    }
+    .brand{display:flex;align-items:center;gap:12px;}
+    .logo{
+      width:44px;height:44px;border-radius:14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: var(--shadow);
+      display:flex;align-items:center;justify-content:center;
+      font-weight:1100;
+      font-size:22px;
+      color:#fff;
+      user-select:none;
+    }
+    h1{font-size:22px;margin:0}
+    .sub{color:var(--muted);font-size:14px;margin-top:2px}
+    .pillrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .pill{
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      padding:10px 12px;border-radius:999px;
+      display:flex;gap:10px;align-items:center;
+      backdrop-filter: blur(10px);
+    }
+    .pill strong{font-weight:1000}
+    .btn{
+      border:0;
+      background: linear-gradient(135deg, var(--accent), #5a8bff);
+      color:white;
+      padding:10px 14px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight:1000;
+      box-shadow: var(--shadow);
+      transition: transform .12s ease, opacity .12s ease;
+    }
+    .btn:active{transform: translateY(1px)}
+    .btn.secondary{
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:none;
+      font-weight:900;
+    }
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.6fr .9fr;
+      gap:18px;
+      align-items:start;
+    }
+    @media (max-width: 900px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .inner{padding:16px}
+
+    .toolbar{
+      display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+    }
+    .search{
+      flex:1;
+      min-width: 220px;
+      display:flex;gap:10px;align-items:center;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      padding:10px 12px;border-radius: 14px;
+    }
+    input, textarea, select{
+      width:100%;
+      background: transparent;
+      border:0;
+      outline:0;
+      color:var(--text);
+      font-size:14px;
+    }
+    textarea{
+      min-height: 110px;
+      resize: vertical;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding:10px 12px;
+    }
+    select{
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding:10px 12px;
+      width:auto;
+    }
+
+    .products{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:14px;
+      margin-top:14px;
+    }
+    @media (max-width: 620px){
+      .products{grid-template-columns:1fr}
+    }
+
+    .p{
+      background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.10));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height: 390px;
+    }
+
+    .media{
+      padding:12px 12px 0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .mainimg{
+      width:100%;
+      height:170px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+      background: rgba(255,255,255,.03);
+    }
+    .mainimg img{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:block;
+    }
+
+    .thumbs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .thumbbtn{
+      width:64px;height:44px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      overflow:hidden;
+      padding:0;
+      cursor:pointer;
+    }
+    .thumbbtn img{
+      width:100%;height:100%;
+      object-fit:cover;
+      display:block;
+      opacity:.95;
+    }
+    .thumbbtn.active{
+      outline: 2px solid rgba(124,92,255,.85);
+      border-color: rgba(124,92,255,.45);
+    }
+
+    .content{padding:12px;display:flex;flex-direction:column;gap:8px;flex:1}
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .muted{color:var(--muted);font-size:13px;line-height:1.35}
+    .price{font-weight:1100;font-size:16px}
+    .tiny{font-size:12px;color:var(--muted)}
+    .tag{
+      font-size:12px;
+      color: rgba(255,255,255,.92);
+      background: rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.12);
+      padding:6px 10px;border-radius:999px;
+    }
+    .tagrow{display:flex;gap:8px;flex-wrap:wrap}
+
+    .options{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:4px;
+    }
+    .opt{
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding:10px 12px;
+    }
+    .opt label{
+      display:block;
+      font-size:12px;
+      color: var(--muted);
+      margin-bottom:6px;
+    }
+    .opt select, .opt input{
+      width:100%;
+      padding:8px 10px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+    }
+    .opt.full{grid-column: 1 / -1;}
+
+    .actions{display:flex;gap:10px;margin-top:auto}
+    .actions .btn{flex:1}
+    .actions .btn.secondary{flex:1}
+
+    .side h2{margin:0 0 10px;font-size:16px}
+    .hr{height:1px;background: rgba(255,255,255,.10);margin:12px 0}
+    .cartline{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+      padding:10px 0;
+      border-bottom: 1px dashed rgba(255,255,255,.14);
+    }
+    .cartline:last-child{border-bottom:0}
+    .qty{
+      display:flex;align-items:center;gap:8px;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      padding:6px 8px;border-radius:12px;
+      margin-top:2px;
+    }
+    .qty button{
+      width:28px;height:28px;border-radius:10px;border:0;
+      background: rgba(255,255,255,.10);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:1100;
+    }
+    .cartopts{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+    .cartopts select, .cartopts input{
+      padding:8px 10px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      width:auto;
+      max-width: 100%;
+    }
+
+    .total{
+      display:flex;align-items:center;justify-content:space-between;
+      font-size:16px;font-weight:1100;
+      padding-top:8px;
+    }
+    .notice{
+      background: rgba(49,208,170,.12);
+      border:1px solid rgba(49,208,170,.35);
+      padding:10px 12px;border-radius:14px;
+      color: rgba(232,238,252,.95);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .danger{
+      background: rgba(255,92,122,.10);
+      border:1px solid rgba(255,92,122,.30);
+    }
+    .toggle{display:flex;align-items:center;gap:10px;}
+    .toggle input{width:auto}
+    footer{
+      color: var(--muted);
+      font-size:12px;
+      text-align:center;
+      padding:18px 0 30px;
+    }
+    .oos-tag{
+      color: rgba(255,255,255,.92);
+      background: rgba(255,92,122,.14);
+      border: 1px solid rgba(255,92,122,.38);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+  </style>
 </head>
-
 <body>
-<div class="wrap">
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">⚡</div>
+        <div>
+          <h1 id="shopName">Local Layer Prints</h1>
+          <div class="sub" id="shopTagline">Local pickup or delivery</div>
+        </div>
+      </div>
 
-<h1>Local Layer Prints</h1>
-<p>Local pickup or delivery</p>
+      <div class="pillrow">
+        <div class="pill">
+          <span>Delivery fee:</span>
+          <strong id="deliveryFeeLabel">$3.00</strong>
+        </div>
+      </div>
+    </header>
 
-<div class="products" id="productGrid"></div>
+    <div class="grid">
+      <!-- LEFT -->
+      <section class="card">
+        <div class="inner">
+          <div class="toolbar">
+            <div class="search" title="Search listings">
+              <span style="opacity:.8">🔎</span>
+              <input id="searchInput" placeholder="Search prints..." />
+            </div>
 
-<div class="card">
-<h3>Your Order</h3>
+            <select id="categoryFilter" title="Filter category">
+              <option value="all">All</option>
+            </select>
+          </div>
 
-<label><input type="radio" name="fulfill" checked> Pickup (free)</label><br>
-<label><input type="radio" name="fulfill"> Delivery (+$3)</label>
+          <div class="products" id="productGrid"></div>
+        </div>
+      </section>
 
-<p><strong>Total:</strong> <span id="total">$0.00</span></p>
+      <!-- RIGHT -->
+      <aside class="card side">
+        <div class="inner">
+          <h2>Your order</h2>
+          <div class="tiny">Pick options (color/capacity), add items, then send the request.</div>
 
-<button class="btn" id="buildMessageBtn">Build order message</button>
-<button class="btn secondary" id="emailBtn">Email order</button>
-<button class="btn secondary" id="clearBtn">Clear</button>
+          <div class="hr"></div>
 
-<textarea id="messageBox" placeholder="Order message appears here"></textarea>
-</div>
+          <div class="toggle">
+            <input type="radio" name="fulfillment" id="pickupRadio" checked />
+            <label for="pickupRadio"><strong>Pickup</strong> (free)</label>
+          </div>
+          <div class="toggle" style="margin-top:8px;">
+            <input type="radio" name="fulfillment" id="deliveryRadio" />
+            <label for="deliveryRadio"><strong>Delivery</strong> (+<span id="deliveryFeeInline">$3.00</span>)</label>
+          </div>
 
-</div>
+          <div class="hr"></div>
 
-<script>
-/* ===== AUTO UPDATE ===== */
-(async function autoUpdate(){
-  try{
-    const r=await fetch("version.json?v="+Date.now(),{cache:"no-store"});
-    const j=await r.json();
-    const k="llp_version";
-    const last=localStorage.getItem(k);
-    if(last && last!==j.v){localStorage.setItem(k,j.v);location.reload()}
-    if(!last)localStorage.setItem(k,j.v);
-  }catch(e){}
-})();
+          <div id="cartEmpty" class="notice danger">
+            Your cart is empty. Add a print to start an order.
+          </div>
 
-/* ===== SHOP DATA ===== */
-const CAPACITY_PRICE={3:12,4:13,5:14,6:15};
-const COLORS=["Orange","Blue","Red","Gold","Grey"];
-let OUT_OF_STOCK=new Set();
+          <div id="cartLines"></div>
 
-fetch("data.json")
-.then(r=>r.json())
-.then(d=>OUT_OF_STOCK=new Set(d.outOfStockColors||[]));
+          <div class="hr"></div>
 
-const PRODUCTS=[
-{id:"glasses",name:"Stackable Glasses Stand",capacity:true},
-{id:"shoes",name:"Stackable Shoe Stand",capacity:true},
-{id:"scrub",name:"Scrub Daddy Holder",price:5},
-{id:"wallet",name:"Cascade Wallet",price:10}
-];
+          <div class="total">
+            <span>Total</span>
+            <span id="totalPrice">$0.00</span>
+          </div>
+          <div class="tiny" id="totalNote" style="margin-top:6px;">
+            Delivery fee is added only if you select delivery.
+          </div>
 
-const cart=[];
+          <div class="hr"></div>
 
-/* ===== UI ===== */
-const grid=document.getElementById("productGrid");
-PRODUCTS.forEach(p=>{
-  const d=document.createElement("div");
-  d.className="card";
-  d.innerHTML=`
-  <h3>${p.name}</h3>
-  ${p.capacity?`
-  <select data-cap>
-    <option value="3">3 ($12)</option>
-    <option value="4">4 ($13)</option>
-    <option value="5">5 ($14)</option>
-    <option value="6">6 ($15)</option>
-  </select>`:""}
-  <select data-color>
-    ${COLORS.map(c=>`<option ${OUT_OF_STOCK.has(c)?"disabled":""}>${c}${OUT_OF_STOCK.has(c)?" (Out)":""}</option>`).join("")}
-  </select>
-  <button class="btn">Add</button>`;
-  d.querySelector("button").onclick=()=>{
-    cart.push({p,cap:d.querySelector("[data-cap]")?.value,color:d.querySelector("[data-color]").value});
-    renderTotal();
-  };
-  grid.appendChild(d);
-});
+          <div class="row" style="gap:12px;">
+            <button class="btn" id="buildMessageBtn">Build order message</button>
+            <button class="btn secondary" id="emailBtn">Email order</button>
+            <button class="btn secondary" id="clearCartBtn">Clear</button>
+          </div>
 
-function renderTotal(){
-  let t=0;
-  cart.forEach(i=>{
-    t+=i.p.capacity?CAPACITY_PRICE[i.cap]:i.p.price;
-  });
-  document.getElementById("total").textContent="$"+t.toFixed(2);
-}
+          <div style="margin-top:12px;">
+            <div class="tiny" style="margin-bottom:6px;">Customer name + address (optional)</div>
+            <input id="customerName" placeholder="Name (optional)" style="background: rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.10); padding:10px 12px; border-radius:14px;" />
+            <div style="height:8px;"></div>
+            <input id="customerAddress" placeholder="Address / meetup spot (optional)" style="background: rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.10); padding:10px 12px; border-radius:14px;" />
+            <div style="height:10px;"></div>
+            <textarea id="messageBox" placeholder="Click “Build order message” to generate a text you can send in DM…"></textarea>
+            <div class="row" style="margin-top:10px;">
+              <button class="btn secondary" id="copyBtn">Copy</button>
+            </div>
+            <div class="tiny" style="margin-top:8px;opacity:.95">
+              You can paste this into Marketplace/Nextdoor/text — or hit “Email order”.
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
 
-document.getElementById("buildMessageBtn").onclick=()=>{
-  document.getElementById("messageBox").value=
-  cart.map(i=>`${i.p.name} | ${i.color} ${i.cap||""}`).join("\n");
-};
-document.getElementById("emailBtn").onclick=()=>{
-  location.href="mailto:zacharygustafson99@gmail.com?subject=Order request The Local Layer&body="+encodeURIComponent(messageBox.value);
-};
-document.getElementById("clearBtn").onclick=()=>{
-  cart.length=0;renderTotal();messageBox.value="";
-};
-</script>
+    <footer>
+      © <span id="year"></span> <span id="shopNameFooter">Local Layer Prints</span> • Local pickup/delivery only
+    </footer>
+  </div>
+
+  <script>
+    // =========================
+    // OPTIONAL: AUTO-REFRESH ON VERSION CHANGE
+    // (Create version.json like: { "v": "3" } and bump it when you update site.)
+    // =========================
+    (async function autoUpdate() {
+      try {
+        const res = await fetch("version.json?v=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        const v = data && data.v ? String(data.v) : null;
+        if (!v) return;
+
+        const key = "llp_version";
+        const last = localStorage.getItem(key);
+        if (!last) {
+          localStorage.setItem(key, v);
+          return;
+        }
+        if (last !== v) {
+          localStorage.setItem(key, v);
+          // Force-refresh the page URL so cached assets get busted too
+          const base = location.origin + location.pathname;
+          location.replace(base + "?v=" + encodeURIComponent(v));
+        }
+      } catch (e) {}
+    })();
+
+    // =========================
+    // SHOP SETTINGS
+    // =========================
+    const SHOP = {
+      name: "Local Layer Prints",
+      tagline: "Local pickup or delivery",
+      deliveryFee: 3,
+      neighborhood: "Local area",
+      orderEmailTo: "zacharygustafson99@gmail.com",
+      orderEmailSubject: "Order request The Local Layer"
+    };
+
+    // Color options (allowed)
+    const COLOR_OPTIONS = ["Orange", "Blue", "Red", "Gold", "Grey"];
+
+    // OUT OF STOCK COLORS
+    // Default: Red is out of stock.
+    // Optional: create data.json like { "outOfStockColors": ["Red"] } and edit that instead of HTML.
+    let OUT_OF_STOCK_COLORS = new Set(["Red"]);
+    (async function loadOutOfStock() {
+      try {
+        const res = await fetch("data.json?v=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        OUT_OF_STOCK_COLORS = new Set(data.outOfStockColors || ["Red"]);
+        renderProducts();
+        renderCart();
+      } catch (e) {
+        // Keep defaults if JSON isn't there
+      }
+    })();
+
+    // Capacity pricing for stands (3-6)
+    const CAPACITY_PRICE = { 3: 12, 4: 13, 5: 14, 6: 15 };
+
+    // =========================
+    // PRODUCTS
+    // =========================
+    const PRODUCTS = [
+      {
+        id: "stackable-glasses-stand",
+        name: "Stackable Glasses Stand",
+        basePrice: null,
+        category: "Organizers",
+        tags: ["Stackable", "Glasses"],
+        desc: "Choose a color + how many glasses it should hold (3–6).",
+        images: ["A_digital_photograph_features_three_stackable_glas.png"],
+        options: { color: true, capacity: [3,4,5,6], capacityLabel: "Holds (glasses)" }
+      },
+      {
+        id: "stackable-shoe-stand",
+        name: "Stackable Shoe Stand",
+        basePrice: null,
+        category: "Organizers",
+        tags: ["Stackable", "Shoes"],
+        desc: "Choose a color + how many shoes it should hold (3–6).",
+        images: ["716A1B70-A21F-400E-97BF-6E5DA267601F.jpeg","2EF0535B-7EE6-41F1-9DC1-18F8EEDDC185.jpeg"],
+        options: { color: true, capacity: [3,4,5,6], capacityLabel: "Holds (shoes)" }
+      },
+      {
+        id: "scrub-daddy-holder",
+        name: "Scrub Daddy Holder",
+        basePrice: 5,
+        category: "Kitchen",
+        tags: ["Sink", "Holder"],
+        desc: "Choose a color. Keeps your scrubber off the counter and helps it dry out.",
+        images: ["1d694d1c-9bae-407b-9d25-91427a285def.png"],
+        options: { color: true }
+      },
+      {
+        id: "cascade-wallet",
+        name: "Cascade Wallet",
+        basePrice: 10,
+        category: "Everyday Carry",
+        tags: ["Wallet", "EDC"],
+        desc: "Choose a color. Compact cascade-style wallet.",
+        images: ["wallet.png"],
+        options: { color: true }
+      },
+      {
+        id: "custom-print-request",
+        name: "Custom Print Request",
+        basePrice: 0,
+        category: "Custom",
+        tags: ["Custom", "Quote"],
+        desc: "Request something custom. Add this and describe what you want (size, purpose, pictures/links).",
+        images: [],
+        customRequest: true,
+        options: { color: true }
+      }
+    ];
+
+    // =========================
+    // APP LOGIC
+    // =========================
+    const $ = (sel) => document.querySelector(sel);
+    const fmt = (n) => `$${(Math.round(n * 100) / 100).toFixed(2)}`;
+
+    // key = id|color|capacity
+    const cart = new Map(); // key -> { id, qty, color, capacity, customNote }
+
+    function initShopUI(){
+      $("#shopName").textContent = SHOP.name;
+      $("#shopNameFooter").textContent = SHOP.name;
+      $("#shopTagline").textContent = SHOP.tagline;
+      $("#deliveryFeeLabel").textContent = fmt(SHOP.deliveryFee);
+      $("#deliveryFeeInline").textContent = fmt(SHOP.deliveryFee);
+      $("#year").textContent = new Date().getFullYear();
+    }
+
+    function categoriesFromProducts(){
+      const set = new Set(PRODUCTS.map(p => p.category));
+      return ["all", ...Array.from(set).sort((a,b)=>a.localeCompare(b))];
+    }
+
+    function renderCategoryOptions(){
+      const cats = categoriesFromProducts();
+      const sel = $("#categoryFilter");
+      sel.innerHTML = "";
+      cats.forEach(c => {
+        const o = document.createElement("option");
+        o.value = c;
+        o.textContent = c === "all" ? "All" : c;
+        sel.appendChild(o);
+      });
+    }
+
+    function filteredProducts(){
+      const q = $("#searchInput").value.trim().toLowerCase();
+      const cat = $("#categoryFilter").value;
+      return PRODUCTS.filter(p => {
+        const matchesQ = !q || (p.name + " " + p.desc + " " + (p.tags||[]).join(" ")).toLowerCase().includes(q);
+        const matchesCat = cat === "all" || p.category === cat;
+        return matchesQ && matchesCat;
+      });
+    }
+
+    function getDefaultOptionsForProduct(p){
+      const color = (p.options && p.options.color) ? firstInStockColor() : null;
+      const capacity = (p.options && p.options.capacity) ? p.options.capacity[0] : null;
+      const customNote = p.customRequest ? "" : null;
+      return { color, capacity, customNote };
+    }
+
+    function firstInStockColor(){
+      // pick first color that isn't out of stock
+      for (const c of COLOR_OPTIONS){
+        if (!OUT_OF_STOCK_COLORS.has(c)) return c;
+      }
+      // if all are out of stock, return first anyway
+      return COLOR_OPTIONS[0];
+    }
+
+    function getUnitPrice(p, opts){
+      if (p.options && p.options.capacity){
+        const cap = Number(opts.capacity);
+        return CAPACITY_PRICE[cap] ?? 0;
+      }
+      return Number(p.basePrice ?? 0);
+    }
+
+    function makeCartKey(id, color, capacity){
+      return `${id}|${color || ""}|${capacity || ""}`;
+    }
+
+    function colorOptionsHtml(selected){
+      return COLOR_OPTIONS.map(c => {
+        const oos = OUT_OF_STOCK_COLORS.has(c);
+        const label = oos ? `${c} (out of stock)` : c;
+        const isSel = c === selected;
+        return `<option value="${c}" ${isSel ? "selected":""} ${oos ? "disabled":""}>${label}</option>`;
+      }).join("");
+    }
+
+    function renderProducts(){
+      const grid = $("#productGrid");
+      grid.innerHTML = "";
+      const list = filteredProducts();
+
+      list.forEach(p => {
+        const el = document.createElement("div");
+        el.className = "p";
+
+        const imgs = (p.images && p.images.length) ? p.images : [];
+        const main = imgs[0] || "";
+
+        const defaults = getDefaultOptionsForProduct(p);
+
+        const capOptionsHtml = (p.options && p.options.capacity) ? `
+          <div class="opt">
+            <label>${p.options.capacityLabel || "Holds"}</label>
+            <select data-opt-capacity="${p.id}">
+              ${p.options.capacity.map(c => `<option value="${c}">${c} (${fmt(CAPACITY_PRICE[c])})</option>`).join("")}
+            </select>
+          </div>
+        ` : "";
+
+                const oosTag = OUT_OF_STOCK_COLORS.size
+          ? `<span class="oos-tag">Some colors out of stock</span>`
+          : "";
+
+        el.innerHTML = `
+          <div class="media">
+            ${main ? `
+              <div class="mainimg">
+                <img src="${main}" alt="${p.name}">
+              </div>
+            ` : ""}
+            ${imgs.length > 1 ? `
+              <div class="thumbs">
+                ${imgs.map((img,i)=>`
+                  <button class="thumbbtn ${i===0?'active':''}" data-img="${img}">
+                    <img src="${img}">
+                  </button>
+                `).join("")}
+              </div>
+            ` : ""}
+          </div>
+
+          <div class="content">
+            <div class="row">
+              <strong>${p.name}</strong>
+              <span class="price">${p.basePrice !== null ? fmt(p.basePrice) : ""}</span>
+            </div>
+
+            <div class="muted">${p.desc}</div>
+
+            <div class="tagrow">
+              ${(p.tags||[]).map(t=>`<span class="tag">${t}</span>`).join("")}
+              ${oosTag}
+            </div>
+
+            <div class="options">
+              ${p.options?.color ? `
+                <div class="opt">
+                  <label>Color</label>
+                  <select data-opt-color="${p.id}">
+                    ${colorOptionsHtml(defaults.color)}
+                  </select>
+                </div>
+              ` : ""}
+
+              ${capOptionsHtml}
+
+              ${p.customRequest ? `
+                <div class="opt full">
+                  <label>Describe what you want</label>
+                  <input data-opt-custom="${p.id}" placeholder="Size, purpose, links, etc.">
+                </div>
+              ` : ""}
+            </div>
+
+            <div class="actions">
+              <button class="btn" data-add="${p.id}">Add</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(el);
+      });
+    }
+
+    function renderCart(){
+      const lines = $("#cartLines");
+      lines.innerHTML = "";
+
+      if (!cart.size){
+        $("#cartEmpty").style.display = "block";
+        $("#totalPrice").textContent = fmt(0);
+        return;
+      }
+      $("#cartEmpty").style.display = "none";
+
+      let subtotal = 0;
+
+      cart.forEach(item=>{
+        const p = PRODUCTS.find(x=>x.id===item.id);
+        const price = getUnitPrice(p, item);
+        subtotal += price * item.qty;
+
+        const div = document.createElement("div");
+        div.className = "cartline";
+        div.innerHTML = `
+          <div>
+            <strong>${p.name}</strong>
+            <div class="tiny">${item.color || ""} ${item.capacity ? "• "+item.capacity : ""}</div>
+            ${item.customNote ? `<div class="tiny">"${item.customNote}"</div>` : ""}
+            <div class="qty">
+              <button data-dec="${item.key}">−</button>
+              <strong>${item.qty}</strong>
+              <button data-inc="${item.key}">+</button>
+            </div>
+          </div>
+          <strong>${fmt(price * item.qty)}</strong>
+        `;
+        lines.appendChild(div);
+      });
+
+      const delivery = $("#deliveryRadio").checked ? SHOP.deliveryFee : 0;
+      $("#totalPrice").textContent = fmt(subtotal + delivery);
+    }
+
+    function addToCart(id){
+      const p = PRODUCTS.find(x=>x.id===id);
+      const color = document.querySelector(`[data-opt-color="${id}"]`)?.value || null;
+      const capacity = document.querySelector(`[data-opt-capacity="${id}"]`)?.value || null;
+      const customNote = document.querySelector(`[data-opt-custom="${id}"]`)?.value || null;
+
+      const key = makeCartKey(id, color, capacity);
+      if (cart.has(key)) {
+        cart.get(key).qty++;
+      } else {
+        cart.set(key, { key, id, qty:1, color, capacity, customNote });
+      }
+      renderCart();
+    }
+
+    function buildOrderMessage(){
+      let msg = `${SHOP.name} Order Request\n\n`;
+      cart.forEach(item=>{
+        const p = PRODUCTS.find(x=>x.id===item.id);
+        msg += `${item.qty}x ${p.name}`;
+        if (item.color) msg += ` (${item.color})`;
+        if (item.capacity) msg += ` – Holds ${item.capacity}`;
+        if (item.customNote) msg += `\nNote: ${item.customNote}`;
+        msg += "\n\n";
+      });
+      msg += $("#deliveryRadio").checked ? "Delivery\n" : "Pickup\n";
+      msg += `Total: ${$("#totalPrice").textContent}\n`;
+
+      if ($("#customerName").value) msg += `\nName: ${$("#customerName").value}`;
+      if ($("#customerAddress").value) msg += `\nAddress: ${$("#customerAddress").value}`;
+
+      $("#messageBox").value = msg.trim();
+    }
+
+    function emailOrder(){
+      const body = encodeURIComponent($("#messageBox").value || "");
+      location.href = `mailto:${SHOP.orderEmailTo}?subject=${encodeURIComponent(SHOP.orderEmailSubject)}&body=${body}`;
+    }
+
+    // =========================
+    // EVENTS
+    // =========================
+    document.addEventListener("click", e=>{
+      if (e.target.dataset.add) addToCart(e.target.dataset.add);
+      if (e.target.dataset.inc) { cart.get(e.target.dataset.inc).qty++; renderCart(); }
+      if (e.target.dataset.dec) {
+        const it = cart.get(e.target.dataset.dec);
+        if (--it.qty <= 0) cart.delete(it.key);
+        renderCart();
+      }
+    });
+
+    $("#buildMessageBtn").onclick = buildOrderMessage;
+    $("#emailBtn").onclick = emailOrder;
+    $("#clearCartBtn").onclick = ()=>{ cart.clear(); renderCart(); };
+    $("#copyBtn").onclick = ()=>navigator.clipboard.writeText($("#messageBox").value);
+
+    $("#pickupRadio").onchange = renderCart;
+    $("#deliveryRadio").onchange = renderCart;
+    $("#searchInput").oninput = renderProducts;
+    $("#categoryFilter").onchange = renderProducts;
+
+    // =========================
+    // INIT
+    // =========================
+    initShopUI();
+    renderCategoryOptions();
+    renderProducts();
+    renderCart();
+  </script>
 </body>
 </html>
 
