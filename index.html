@@ -441,7 +441,20 @@
     const COLOR_OPTIONS = ["Orange", "Blue", "Red", "Gold", "Grey"];
 
     // Out of stock colors (display + prevent selecting)
-    const OUT_OF_STOCK_COLORS = new Set(["Red"]);
+    let OUT_OF_STOCK_COLORS = new Set();
+    
+    fetch("data.json")
+  .then(res => res.json())
+  .then(data => {
+    OUT_OF_STOCK_COLORS = new Set(data.outOfStockColors || []);
+    renderProducts();
+    renderCart();
+  })
+  .catch(() => {
+    // fail-safe: site still works if JSON fails
+    OUT_OF_STOCK_COLORS = new Set();
+  });
+
 
     // Capacity pricing for stands (3-6)
     const CAPACITY_PRICE = { 3: 12, 4: 13, 5: 14, 6: 15 };
