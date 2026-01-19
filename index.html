@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -246,6 +247,10 @@
       background: rgba(0,0,0,.20);
     }
     .opt.full{grid-column: 1 / -1;}
+    .opt select:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
 
     .actions{display:flex;gap:10px;margin-top:auto}
     .actions .btn{flex:1}
@@ -331,7 +336,6 @@
           <span>Delivery fee:</span>
           <strong id="deliveryFeeLabel">$3.00</strong>
         </div>
-        <button class="btn secondary" id="editShopBtn">Edit shop info</button>
       </div>
     </header>
 
@@ -436,8 +440,10 @@
     // Color options (allowed)
     const COLOR_OPTIONS = ["Orange", "Blue", "Red", "Gold", "Grey"];
 
+    // Out of stock colors (display + prevent selecting)
+    const OUT_OF_STOCK_COLORS = new Set(["Red"]);
+
     // Capacity pricing for stands (3-6)
-    // (Changed 6 from $16 to $15 like you requested)
     const CAPACITY_PRICE = { 3: 12, 4: 13, 5: 14, 6: 15 };
 
     // =========================
@@ -474,8 +480,6 @@
         images: ["1d694d1c-9bae-407b-9d25-91427a285def.png"],
         options: { color: true }
       },
-
-      <!-- NEW ITEM -->
       {
         id: "cascade-wallet",
         name: "Cascade Style Wallet",
@@ -486,7 +490,6 @@
         images: ["wallet.png"],
         options: { color: true }
       },
-
       {
         id: "custom-print-request",
         name: "Custom Print Request",
@@ -545,8 +548,12 @@
       });
     }
 
+    function firstInStockColor(){
+      return COLOR_OPTIONS.find(c => !OUT_OF_STOCK_COLORS.has(c)) || COLOR_OPTIONS[0];
+    }
+
     function getDefaultOptionsForProduct(p){
-      const color = (p.options && p.options.color) ? COLOR_OPTIONS[0] : null;
+      const color = (p.options && p.options.color) ? firstInStockColor() : null;
       const capacity = (p.options && p.options.capacity) ? p.options.capacity[0] : null;
       const customNote = p.customRequest ? "" : null;
       return { color, capacity, customNote };
@@ -562,6 +569,14 @@
 
     function makeCartKey(id, color, capacity){
       return `${id}|${color || ""}|${capacity || ""}`;
+    }
+
+    function colorOptionsHtml(selected){
+      return COLOR_OPTIONS.map(c => {
+        const oos = OUT_OF_STOCK_COLORS.has(c);
+        const label = oos ? `${c} (Out of stock)` : c;
+        return `<option value="${c}" ${c===selected ? "selected":""} ${oos ? "disabled":""}>${label}</option>`;
+      }).join("");
     }
 
     function renderProducts(){
@@ -590,7 +605,7 @@
           <div class="opt">
             <label>Color</label>
             <select data-opt-color="${p.id}">
-              ${COLOR_OPTIONS.map(c => `<option value="${c}">${c}</option>`).join("")}
+              ${colorOptionsHtml(defaults.color)}
             </select>
           </div>
         ` : "";
@@ -653,15 +668,6 @@
           </div>
         `;
         grid.appendChild(el);
-
-        if (p.options && p.options.color){
-          const sel = grid.querySelector(`select[data-opt-color="${p.id}"]`);
-          if (sel) sel.value = defaults.color;
-        }
-        if (p.options && p.options.capacity){
-          const sel = grid.querySelector(`select[data-opt-capacity="${p.id}"]`);
-          if (sel) sel.value = String(defaults.capacity);
-        }
       });
 
       grid.querySelectorAll("[data-add]").forEach(btn => {
@@ -707,7 +713,8 @@
       if (p.options && p.options.capacity){
         extra = `\nPricing:\n- 3 = $12\n- 4 = $13\n- 5 = $14\n- 6 = $15`;
       }
-      alert(`${p.name}\nCategory: ${p.category}\n${p.customRequest ? "Price: Quote" : "Price: " + (p.options && p.options.capacity ? "depends on capacity" : fmt(p.basePrice))}\n\n${p.desc}${extra}\n\nDelivery fee (if chosen): ${fmt(SHOP.deliveryFee)}`);
+      const oos = OUT_OF_STOCK_COLORS.size ? `\n\nOut of stock color(s): ${Array.from(OUT_OF_STOCK_COLORS).join(", ")}` : "";
+      alert(`${p.name}\nCategory: ${p.category}\n${p.customRequest ? "Price: Quote" : "Price: " + (p.options && p.options.capacity ? "depends on capacity" : fmt(p.basePrice))}\n\n${p.desc}${extra}${oos}\n\nDelivery fee (if chosen): ${fmt(SHOP.deliveryFee)}`);
     }
 
     function addToCartFromCard(id){
@@ -720,6 +727,12 @@
 
       const color = (colorSel && p.options && p.options.color) ? colorSel.value : null;
       const capacity = (capSel && p.options && p.options.capacity) ? capSel.value : null;
+
+      if (color && OUT_OF_STOCK_COLORS.has(color)){
+        alert(`Sorry — ${color} is currently out of stock. Please choose a different color.`);
+        return;
+      }
+
       const customNote = (p.customRequest && noteInp) ? (noteInp.value.trim() || "") : null;
 
       const key = makeCartKey(id, color, capacity);
@@ -746,7 +759,9 @@
       return items.sort((a,b)=>a.name.localeCompare(b.name));
     }
 
-    function calcSubtotal(){ return cartItems().reduce((sum, it) => sum + (it.isCustom ? 0 : (it.unitPrice * it.qty)), 0); }
+    function calcSubtotal(){
+      return cartItems().reduce((sum, it) => sum + (it.isCustom ? 0 : (it.unitPrice * it.qty)), 0);
+    }
 
     function calcTotal(){
       const subtotal = calcSubtotal();
@@ -764,6 +779,12 @@
     }
 
     function updateCartOption(key, field, value){
+      if (field === "color" && OUT_OF_STOCK_COLORS.has(value)){
+        alert(`Sorry — ${value} is currently out of stock.`);
+        renderCart();
+        return;
+      }
+
       const it = cart.get(key);
       if(!it) return;
 
@@ -810,6 +831,7 @@
         .replaceAll("'","&#039;");
     }
 
+    // (keep one definition only; already used above)
     function renderCart(){
       const linesEl = $("#cartLines");
       const emptyEl = $("#cartEmpty");
@@ -841,7 +863,7 @@
             <div class="cartopts">
               ${needsColor ? `
                 <select data-cart-color="${it.key}">
-                  ${COLOR_OPTIONS.map(c => `<option value="${c}" ${c===it.color ? "selected":""}>${c}</option>`).join("")}
+                  ${colorOptionsHtml(it.color)}
                 </select>
               ` : ""}
 
@@ -855,8 +877,12 @@
             ${it.isCustom ? `
               <div style="margin-top:8px;">
                 <div class="tiny" style="margin-bottom:6px;">Custom request details</div>
-                <input data-cart-customnote="${it.key}" value="${escapeHtml(it.customNote || "")}"
-                       placeholder="Describe what you want printed (size, purpose, links)..." />
+                <input
+                  data-cart-customnote="${it.key}"
+                  value="${escapeHtml(it.customNote || "")}"
+                  placeholder="Describe what you want printed (size, purpose, links)..."
+                  style="background: rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.10); padding:10px 12px; border-radius:14px; width:100%; color:var(--text);"
+                />
               </div>
             ` : ""}
 
@@ -871,6 +897,7 @@
         linesEl.appendChild(line);
       });
 
+      // qty buttons
       linesEl.querySelectorAll("[data-qty-minus]").forEach(btn => {
         btn.addEventListener("click", () => {
           const key = btn.getAttribute("data-qty-minus");
@@ -886,6 +913,7 @@
         });
       });
 
+      // option changes inside cart
       linesEl.querySelectorAll("select[data-cart-color]").forEach(sel => {
         sel.addEventListener("change", () => {
           const key = sel.getAttribute("data-cart-color");
@@ -899,6 +927,7 @@
         });
       });
 
+      // custom note inputs
       linesEl.querySelectorAll("input[data-cart-customnote]").forEach(inp => {
         inp.addEventListener("input", () => {
           const key = inp.getAttribute("data-cart-customnote");
@@ -906,6 +935,7 @@
         });
       });
 
+      // delivery/pickup line
       if(items.length){
         const deliveryRow = document.createElement("div");
         deliveryRow.className = "cartline";
@@ -991,23 +1021,6 @@ When can we meet / deliver?`;
       $("#messageBox").value = "";
     }
 
-    function editShopInfo(){
-      const name = prompt("Shop name:", SHOP.name);
-      if(name !== null && name.trim()) SHOP.name = name.trim();
-
-      const tag = prompt("Tagline:", SHOP.tagline);
-      if(tag !== null && tag.trim()) SHOP.tagline = tag.trim();
-
-      const fee = prompt("Delivery fee (number):", SHOP.deliveryFee);
-      if(fee !== null && fee.trim() && !Number.isNaN(Number(fee))) SHOP.deliveryFee = Number(fee);
-
-      const area = prompt("Your area/neighborhood text:", SHOP.neighborhood);
-      if(area !== null && area.trim()) SHOP.neighborhood = area.trim();
-
-      initShopUI();
-      renderCart();
-    }
-
     // Events
     $("#searchInput").addEventListener("input", renderProducts);
     $("#categoryFilter").addEventListener("change", renderProducts);
@@ -1017,7 +1030,6 @@ When can we meet / deliver?`;
     $("#emailBtn").addEventListener("click", emailOrder);
     $("#copyBtn").addEventListener("click", copyMessage);
     $("#clearCartBtn").addEventListener("click", clearCart);
-    $("#editShopBtn").addEventListener("click", editShopInfo);
 
     // Init
     initShopUI();
@@ -1027,4 +1039,3 @@ When can we meet / deliver?`;
   </script>
 </body>
 </html>
-
