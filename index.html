@@ -442,6 +442,26 @@
 
     // Out of stock colors (display + prevent selecting)
     let OUT_OF_STOCK_COLORS = new Set();
+
+    (async function autoUpdate() {
+  try {
+    const res = await fetch("version.json?v=" + Date.now(), { cache: "no-store" });
+    const { v } = await res.json();
+
+    const key = "llp_version";
+    const last = localStorage.getItem(key);
+
+    if (last && last !== v) {
+      localStorage.setItem(key, v);
+      location.reload();
+      return;
+    }
+    if (!last) localStorage.setItem(key, v);
+  } catch (e) {
+    // ignore if version file missing
+  }
+})();
+
     
     fetch("data.json")
   .then(res => res.json())
