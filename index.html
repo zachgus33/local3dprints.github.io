@@ -264,20 +264,6 @@
       cursor:pointer;
       font-weight:1100;
     }
-    .cartopts{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:6px;
-    }
-    .cartopts select, .cartopts input{
-      padding:8px 10px;
-      border-radius: 12px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      width:auto;
-      max-width: 100%;
-    }
 
     .total{
       display:flex;align-items:center;justify-content:space-between;
@@ -376,6 +362,11 @@
             Your cart is empty. Add a print to start an order.
           </div>
 
+          <!-- NEW: warning shown when trying to build/email with an empty cart -->
+          <div id="actionMsg" class="notice danger" style="display:none; margin-top:12px;">
+            Add something to your cart first.
+          </div>
+
           <div id="cartLines"></div>
 
           <div class="hr"></div>
@@ -440,7 +431,6 @@
         }
         if (last !== v) {
           localStorage.setItem(key, v);
-          // Force-refresh the page URL so cached assets get busted too
           const base = location.origin + location.pathname;
           location.replace(base + "?v=" + encodeURIComponent(v));
         }
@@ -463,8 +453,6 @@
     const COLOR_OPTIONS = ["Orange", "Blue", "Red", "Gold", "Grey"];
 
     // OUT OF STOCK COLORS
-    // Default: Red is out of stock.
-    // Optional: create data.json like { "outOfStockColors": ["Red"] } and edit that instead of HTML.
     let OUT_OF_STOCK_COLORS = new Set(["Red"]);
     (async function loadOutOfStock() {
       try {
@@ -474,9 +462,7 @@
         OUT_OF_STOCK_COLORS = new Set(data.outOfStockColors || ["Red"]);
         renderProducts();
         renderCart();
-      } catch (e) {
-        // Keep defaults if JSON isn't there
-      }
+      } catch (e) {}
     })();
 
     // Capacity pricing for stands (3-6)
@@ -545,8 +531,7 @@
     const $ = (sel) => document.querySelector(sel);
     const fmt = (n) => `$${(Math.round(n * 100) / 100).toFixed(2)}`;
 
-    // key = id|color|capacity
-    const cart = new Map(); // key -> { id, qty, color, capacity, customNote }
+    const cart = new Map(); // key -> { key, id, qty, color, capacity, customNote }
 
     function initShopUI(){
       $("#shopName").textContent = SHOP.name;
@@ -592,11 +577,9 @@
     }
 
     function firstInStockColor(){
-      // pick first color that isn't out of stock
       for (const c of COLOR_OPTIONS){
         if (!OUT_OF_STOCK_COLORS.has(c)) return c;
       }
-      // if all are out of stock, return first anyway
       return COLOR_OPTIONS[0];
     }
 
@@ -619,6 +602,21 @@
         const isSel = c === selected;
         return `<option value="${c}" ${isSel ? "selected":""} ${oos ? "disabled":""}>${label}</option>`;
       }).join("");
+    }
+
+    // NEW: message shown when trying to build/email with an empty cart
+    function showActionMsg(text){
+      const el = $("#actionMsg");
+      if (!el) return;
+      el.textContent = text;
+      el.style.display = "block";
+      clearTimeout(showActionMsg._t);
+      showActionMsg._t = setTimeout(()=>{ el.style.display = "none"; }, 2500);
+    }
+    function requireCartOrWarn(){
+      if (cart.size) return true;
+      showActionMsg("Add something to your cart first.");
+      return false;
     }
 
     function renderProducts(){
@@ -644,7 +642,7 @@
           </div>
         ` : "";
 
-                const oosTag = OUT_OF_STOCK_COLORS.size
+        const oosTag = OUT_OF_STOCK_COLORS.size
           ? `<span class="oos-tag">Some colors out of stock</span>`
           : "";
 
@@ -719,6 +717,10 @@
       }
       $("#cartEmpty").style.display = "none";
 
+      // NEW: hide warning once they have items
+      const am = $("#actionMsg");
+      if (am) am.style.display = "none";
+
       let subtotal = 0;
 
       cart.forEach(item=>{
@@ -749,7 +751,6 @@
     }
 
     function addToCart(id){
-      const p = PRODUCTS.find(x=>x.id===id);
       const color = document.querySelector(`[data-opt-color="${id}"]`)?.value || null;
       const capacity = document.querySelector(`[data-opt-capacity="${id}"]`)?.value || null;
       const customNote = document.querySelector(`[data-opt-custom="${id}"]`)?.value || null;
@@ -764,6 +765,8 @@
     }
 
     function buildOrderMessage(){
+      if (!requireCartOrWarn()) return;
+
       let msg = `${SHOP.name} Order Request\n\n`;
       cart.forEach(item=>{
         const p = PRODUCTS.find(x=>x.id===item.id);
@@ -783,6 +786,11 @@
     }
 
     function emailOrder(){
+      if (!requireCartOrWarn()) return;
+
+      // If they haven't built it yet, build it automatically
+      if (!$("#messageBox").value.trim()) buildOrderMessage();
+
       const body = encodeURIComponent($("#messageBox").value || "");
       location.href = `mailto:${SHOP.orderEmailTo}?subject=${encodeURIComponent(SHOP.orderEmailSubject)}&body=${body}`;
     }
@@ -792,6 +800,7 @@
     // =========================
     document.addEventListener("click", e=>{
       if (e.target.dataset.add) addToCart(e.target.dataset.add);
+
       if (e.target.dataset.inc) { cart.get(e.target.dataset.inc).qty++; renderCart(); }
       if (e.target.dataset.dec) {
         const it = cart.get(e.target.dataset.dec);
@@ -802,13 +811,17 @@
 
     $("#buildMessageBtn").onclick = buildOrderMessage;
     $("#emailBtn").onclick = emailOrder;
+
     $("#clearCartBtn").onclick = () => {
-  cart.clear();
-  $("#messageBox").value = "";
-  $("#customerName").value = "";
-  $("#customerAddress").value = "";
-  renderCart();
-};
+      cart.clear();
+      $("#messageBox").value = "";
+      $("#customerName").value = "";
+      $("#customerAddress").value = "";
+      const am = $("#actionMsg");
+      if (am) am.style.display = "none";
+      renderCart();
+    };
+
     $("#copyBtn").onclick = ()=>navigator.clipboard.writeText($("#messageBox").value);
 
     $("#pickupRadio").onchange = renderCart;
