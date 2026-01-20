@@ -345,6 +345,10 @@
           <h2>Your order</h2>
           <div class="tiny">Pick options (color/capacity), add items, then send the request.</div>
 
+          <div id="actionNotice" class="notice danger" style="display:none; margin-top:12px;">
+            Add something to your cart first.
+          </div>
+
           <div class="hr"></div>
 
           <div class="toggle">
@@ -360,11 +364,6 @@
 
           <div id="cartEmpty" class="notice danger">
             Your cart is empty. Add a print to start an order.
-          </div>
-
-          <!-- NEW: warning shown when trying to build/email with an empty cart -->
-          <div id="actionMsg" class="notice danger" style="display:none; margin-top:12px;">
-            Add something to your cart first.
           </div>
 
           <div id="cartLines"></div>
@@ -450,9 +449,10 @@
     };
 
     // Color options (allowed)
-    const COLOR_OPTIONS = ["White", "Orange", "Blue", "Red", "Gold", "Grey"];
+    const COLOR_OPTIONS = ["Orange", "Blue", "Red", "Gold", "Grey", "White"];
 
     // OUT OF STOCK COLORS
+    // Create data.json like: { "outOfStockColors": ["Red"] }
     let OUT_OF_STOCK_COLORS = new Set(["Red"]);
     (async function loadOutOfStock() {
       try {
@@ -462,7 +462,9 @@
         OUT_OF_STOCK_COLORS = new Set(data.outOfStockColors || ["Red"]);
         renderProducts();
         renderCart();
-      } catch (e) {}
+      } catch (e) {
+        // Keep defaults if JSON isn't there
+      }
     })();
 
     // Capacity pricing for stands (3-6)
@@ -512,6 +514,31 @@
         images: ["wallet.png"],
         options: { color: true }
       },
+
+      <!-- NEW: Toothpaste Squeezer -->
+      {
+        id: "toothpaste-squeezer",
+        name: "Toothpaste Squeezer",
+        basePrice: 3,
+        category: "Bathroom",
+        tags: ["Bathroom", "Squeezer"],
+        desc: "Choose a color. Helps squeeze the most out of your toothpaste tube.",
+        images: ["8ec2b103-733a-4b0e-a8ee-0d748520655a.png"],
+        options: { color: true }
+      },
+
+      <!-- NEW: EDC Adventure Catch-All Tray (dual color) -->
+      {
+        id: "edc-adventure-tray",
+        name: "EDC Adventure Catch-All Tray",
+        basePrice: 12,
+        category: "Everyday Carry",
+        tags: ["Tray", "EDC", "Dual Color"],
+        desc: "Choose 2 colors: base + topographical lines/outline (dual-color like the photo).",
+        images: ["bd1d1ea9-9fb9-4537-91b8-0f852c18fd6b.png"],
+        options: { color: true, color2: true, colorLabel: "Base color", color2Label: "Topo lines color" }
+      },
+
       {
         id: "custom-print-request",
         name: "Custom Print Request",
@@ -531,7 +558,16 @@
     const $ = (sel) => document.querySelector(sel);
     const fmt = (n) => `$${(Math.round(n * 100) / 100).toFixed(2)}`;
 
-    const cart = new Map(); // key -> { key, id, qty, color, capacity, customNote }
+    // key = id|color|color2|capacity
+    const cart = new Map(); // key -> { key, id, qty, color, color2, capacity, customNote }
+
+    function showActionNotice(text){
+      const box = $("#actionNotice");
+      box.textContent = text || "Add something to your cart first.";
+      box.style.display = "block";
+      clearTimeout(showActionNotice._t);
+      showActionNotice._t = setTimeout(()=>{ box.style.display = "none"; }, 3200);
+    }
 
     function initShopUI(){
       $("#shopName").textContent = SHOP.name;
@@ -569,18 +605,19 @@
       });
     }
 
-    function getDefaultOptionsForProduct(p){
-      const color = (p.options && p.options.color) ? firstInStockColor() : null;
-      const capacity = (p.options && p.options.capacity) ? p.options.capacity[0] : null;
-      const customNote = p.customRequest ? "" : null;
-      return { color, capacity, customNote };
-    }
-
     function firstInStockColor(){
       for (const c of COLOR_OPTIONS){
         if (!OUT_OF_STOCK_COLORS.has(c)) return c;
       }
       return COLOR_OPTIONS[0];
+    }
+
+    function getDefaultOptionsForProduct(p){
+      const color = (p.options && p.options.color) ? firstInStockColor() : null;
+      const color2 = (p.options && p.options.color2) ? firstInStockColor() : null;
+      const capacity = (p.options && p.options.capacity) ? p.options.capacity[0] : null;
+      const customNote = p.customRequest ? "" : null;
+      return { color, color2, capacity, customNote };
     }
 
     function getUnitPrice(p, opts){
@@ -591,8 +628,8 @@
       return Number(p.basePrice ?? 0);
     }
 
-    function makeCartKey(id, color, capacity){
-      return `${id}|${color || ""}|${capacity || ""}`;
+    function makeCartKey(id, color, color2, capacity){
+      return `${id}|${color || ""}|${color2 || ""}|${capacity || ""}`;
     }
 
     function colorOptionsHtml(selected){
@@ -604,19 +641,12 @@
       }).join("");
     }
 
-    // NEW: message shown when trying to build/email with an empty cart
-    function showActionMsg(text){
-      const el = $("#actionMsg");
-      if (!el) return;
-      el.textContent = text;
-      el.style.display = "block";
-      clearTimeout(showActionMsg._t);
-      showActionMsg._t = setTimeout(()=>{ el.style.display = "none"; }, 2500);
-    }
-    function requireCartOrWarn(){
-      if (cart.size) return true;
-      showActionMsg("Add something to your cart first.");
-      return false;
+    function priceLabelForProduct(p){
+      if (p.options && p.options.capacity){
+        const minCap = Math.min(...p.options.capacity);
+        return `From ${fmt(CAPACITY_PRICE[minCap])}`;
+      }
+      return fmt(Number(p.basePrice ?? 0));
     }
 
     function renderProducts(){
@@ -630,7 +660,6 @@
 
         const imgs = (p.images && p.images.length) ? p.images : [];
         const main = imgs[0] || "";
-
         const defaults = getDefaultOptionsForProduct(p);
 
         const capOptionsHtml = (p.options && p.options.capacity) ? `
@@ -646,18 +675,36 @@
           ? `<span class="oos-tag">Some colors out of stock</span>`
           : "";
 
+        const color1Html = p.options?.color ? `
+          <div class="opt">
+            <label>${p.options.colorLabel || "Color"}</label>
+            <select data-opt-color="${p.id}">
+              ${colorOptionsHtml(defaults.color)}
+            </select>
+          </div>
+        ` : "";
+
+        const color2Html = p.options?.color2 ? `
+          <div class="opt">
+            <label>${p.options.color2Label || "Second color"}</label>
+            <select data-opt-color2="${p.id}">
+              ${colorOptionsHtml(defaults.color2)}
+            </select>
+          </div>
+        ` : "";
+
         el.innerHTML = `
           <div class="media">
             ${main ? `
               <div class="mainimg">
-                <img src="${main}" alt="${p.name}">
+                <img data-main-img="${p.id}" src="${main}" alt="${p.name}">
               </div>
             ` : ""}
             ${imgs.length > 1 ? `
               <div class="thumbs">
                 ${imgs.map((img,i)=>`
-                  <button class="thumbbtn ${i===0?'active':''}" data-img="${img}">
-                    <img src="${img}">
+                  <button class="thumbbtn ${i===0?'active':''}" data-thumb-for="${p.id}" data-img="${img}" title="View image">
+                    <img src="${img}" alt="">
                   </button>
                 `).join("")}
               </div>
@@ -667,7 +714,7 @@
           <div class="content">
             <div class="row">
               <strong>${p.name}</strong>
-              <span class="price">${p.basePrice !== null ? fmt(p.basePrice) : ""}</span>
+              <span class="price">${priceLabelForProduct(p)}</span>
             </div>
 
             <div class="muted">${p.desc}</div>
@@ -678,15 +725,8 @@
             </div>
 
             <div class="options">
-              ${p.options?.color ? `
-                <div class="opt">
-                  <label>Color</label>
-                  <select data-opt-color="${p.id}">
-                    ${colorOptionsHtml(defaults.color)}
-                  </select>
-                </div>
-              ` : ""}
-
+              ${color1Html}
+              ${color2Html}
               ${capOptionsHtml}
 
               ${p.customRequest ? `
@@ -717,10 +757,6 @@
       }
       $("#cartEmpty").style.display = "none";
 
-      // NEW: hide warning once they have items
-      const am = $("#actionMsg");
-      if (am) am.style.display = "none";
-
       let subtotal = 0;
 
       cart.forEach(item=>{
@@ -728,12 +764,16 @@
         const price = getUnitPrice(p, item);
         subtotal += price * item.qty;
 
+        const colorText = item.color ? item.color : "";
+        const color2Text = item.color2 ? ` • Lines: ${item.color2}` : "";
+        const capText = item.capacity ? ` • ${item.capacity}` : "";
+
         const div = document.createElement("div");
         div.className = "cartline";
         div.innerHTML = `
           <div>
             <strong>${p.name}</strong>
-            <div class="tiny">${item.color || ""} ${item.capacity ? "• "+item.capacity : ""}</div>
+            <div class="tiny">${colorText}${color2Text}${capText}</div>
             ${item.customNote ? `<div class="tiny">"${item.customNote}"</div>` : ""}
             <div class="qty">
               <button data-dec="${item.key}">−</button>
@@ -751,31 +791,39 @@
     }
 
     function addToCart(id){
+      const p = PRODUCTS.find(x=>x.id===id);
       const color = document.querySelector(`[data-opt-color="${id}"]`)?.value || null;
+      const color2 = document.querySelector(`[data-opt-color2="${id}"]`)?.value || null;
       const capacity = document.querySelector(`[data-opt-capacity="${id}"]`)?.value || null;
       const customNote = document.querySelector(`[data-opt-custom="${id}"]`)?.value || null;
 
-      const key = makeCartKey(id, color, capacity);
+      const key = makeCartKey(id, color, color2, capacity);
       if (cart.has(key)) {
         cart.get(key).qty++;
       } else {
-        cart.set(key, { key, id, qty:1, color, capacity, customNote });
+        cart.set(key, { key, id, qty:1, color, color2, capacity, customNote });
       }
       renderCart();
     }
 
     function buildOrderMessage(){
-      if (!requireCartOrWarn()) return;
+      if (!cart.size){
+        showActionNotice("Add something to your cart first.");
+        return;
+      }
 
       let msg = `${SHOP.name} Order Request\n\n`;
       cart.forEach(item=>{
         const p = PRODUCTS.find(x=>x.id===item.id);
         msg += `${item.qty}x ${p.name}`;
-        if (item.color) msg += ` (${item.color})`;
+
+        if (item.color) msg += ` (Base: ${item.color})`;
+        if (item.color2) msg += ` (Lines: ${item.color2})`;
         if (item.capacity) msg += ` – Holds ${item.capacity}`;
         if (item.customNote) msg += `\nNote: ${item.customNote}`;
         msg += "\n\n";
       });
+
       msg += $("#deliveryRadio").checked ? "Delivery\n" : "Pickup\n";
       msg += `Total: ${$("#totalPrice").textContent}\n`;
 
@@ -786,12 +834,21 @@
     }
 
     function emailOrder(){
-      if (!requireCartOrWarn()) return;
+      if (!cart.size){
+        showActionNotice("Add something to your cart first.");
+        return;
+      }
 
-      // If they haven't built it yet, build it automatically
-      if (!$("#messageBox").value.trim()) buildOrderMessage();
+      // Always build a fresh message before emailing
+      buildOrderMessage();
 
-      const body = encodeURIComponent($("#messageBox").value || "");
+      const bodyText = $("#messageBox").value || "";
+      if (!bodyText.trim()){
+        showActionNotice("Build your order message first.");
+        return;
+      }
+
+      const body = encodeURIComponent(bodyText);
       location.href = `mailto:${SHOP.orderEmailTo}?subject=${encodeURIComponent(SHOP.orderEmailSubject)}&body=${body}`;
     }
 
@@ -799,13 +856,30 @@
     // EVENTS
     // =========================
     document.addEventListener("click", e=>{
+      // Add/inc/dec
       if (e.target.dataset.add) addToCart(e.target.dataset.add);
 
-      if (e.target.dataset.inc) { cart.get(e.target.dataset.inc).qty++; renderCart(); }
+      if (e.target.dataset.inc) {
+        cart.get(e.target.dataset.inc).qty++;
+        renderCart();
+      }
+
       if (e.target.dataset.dec) {
         const it = cart.get(e.target.dataset.dec);
         if (--it.qty <= 0) cart.delete(it.key);
         renderCart();
+      }
+
+      // Thumbnail switching
+      const thumb = e.target.closest(".thumbbtn");
+      if (thumb && thumb.dataset.thumbFor && thumb.dataset.img){
+        const pid = thumb.dataset.thumbFor;
+        const mainImg = document.querySelector(`img[data-main-img="${pid}"]`);
+        if (mainImg) mainImg.src = thumb.dataset.img;
+
+        const siblings = thumb.parentElement?.querySelectorAll(".thumbbtn") || [];
+        siblings.forEach(b=>b.classList.remove("active"));
+        thumb.classList.add("active");
       }
     });
 
@@ -817,12 +891,19 @@
       $("#messageBox").value = "";
       $("#customerName").value = "";
       $("#customerAddress").value = "";
-      const am = $("#actionMsg");
-      if (am) am.style.display = "none";
+      $("#actionNotice").style.display = "none";
       renderCart();
     };
 
-    $("#copyBtn").onclick = ()=>navigator.clipboard.writeText($("#messageBox").value);
+    $("#copyBtn").onclick = () => {
+      const t = $("#messageBox").value || "";
+      if (!t.trim()){
+        showActionNotice("Build your order message first.");
+        return;
+      }
+      navigator.clipboard.writeText(t);
+      showActionNotice("Copied!");
+    };
 
     $("#pickupRadio").onchange = renderCart;
     $("#deliveryRadio").onchange = renderCart;
