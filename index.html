@@ -5,10 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Local Layer Prints</title>
 
-  <!-- Use your uploaded icon file (put icon.png next to index.html) -->
-  <link rel="icon" href="icon.png" type="image/png">
-  <link rel="apple-touch-icon" href="icon.png">
-  <meta name="theme-color" content="#0b0f19">
+  <!-- Favicon (inline SVG lightning bolt) -->
+  <link rel="icon" type="image/svg+xml"
+    href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%230b0f19"/><path d="M36 6L14 36h16l-2 22 22-30H34l2-22z" fill="%237c5cff"/></svg>' />
 
   <style>
     :root{
@@ -39,17 +38,13 @@
     .brand{display:flex;align-items:center;gap:12px;}
     .logo{
       width:44px;height:44px;border-radius:14px;
-      background: rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
       box-shadow: var(--shadow);
-      overflow:hidden;
       display:flex;align-items:center;justify-content:center;
+      font-weight:1100;
+      font-size:22px;
+      color:#fff;
       user-select:none;
-    }
-    .logo img{
-      width:100%;height:100%;
-      object-fit:cover;
-      display:block;
     }
     h1{font-size:22px;margin:0}
     .sub{color:var(--muted);font-size:14px;margin-top:2px}
@@ -152,7 +147,7 @@
       overflow:hidden;
       display:flex;
       flex-direction:column;
-      min-height: 410px;
+      min-height: 390px;
     }
 
     .media{
@@ -245,6 +240,7 @@
 
     .actions{display:flex;gap:10px;margin-top:auto}
     .actions .btn{flex:1}
+    .actions .btn.secondary{flex:1}
 
     .side h2{margin:0 0 10px;font-size:16px}
     .hr{height:1px;background: rgba(255,255,255,.10);margin:12px 0}
@@ -303,20 +299,13 @@
       font-size: 12px;
       font-weight: 900;
     }
-
-    .toast{
-      display:none;
-      margin-top:12px;
-    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div class="brand">
-        <div class="logo" aria-hidden="true">
-          <img src="icon.png" alt="Local Layer Prints">
-        </div>
+        <div class="logo" aria-hidden="true">⚡</div>
         <div>
           <h1 id="shopName">Local Layer Prints</h1>
           <div class="sub" id="shopTagline">Local pickup or delivery</div>
@@ -354,7 +343,11 @@
       <aside class="card side">
         <div class="inner">
           <h2>Your order</h2>
-          <div class="tiny">Pick options (color/capacity), add items, then place your order.</div>
+          <div class="tiny">Pick options (color/capacity), add items, then send the request.</div>
+
+          <div id="actionNotice" class="notice danger" style="display:none; margin-top:12px;">
+            Add something to your cart first.
+          </div>
 
           <div class="hr"></div>
 
@@ -388,38 +381,23 @@
           <div class="hr"></div>
 
           <div class="row" style="gap:12px;">
-            <button class="btn" id="placeOrderBtn">Place order</button>
+            <button class="btn" id="buildMessageBtn">Build order message</button>
+            <button class="btn secondary" id="emailBtn">Email order</button>
             <button class="btn secondary" id="clearCartBtn">Clear</button>
           </div>
 
-          <div id="actionNotice" class="notice toast" aria-live="polite"></div>
-
           <div style="margin-top:12px;">
-            <div class="tiny" style="margin-bottom:6px;">Customer info (required)</div>
-
-            <input id="customerName" placeholder="Name (required)"
-              style="background: rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.10); padding:10px 12px; border-radius:14px;" />
-
+            <div class="tiny" style="margin-bottom:6px;">Customer name + address (optional)</div>
+            <input id="customerName" placeholder="Name (optional)" style="background: rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.10); padding:10px 12px; border-radius:14px;" />
             <div style="height:8px;"></div>
-
-            <input id="customerEmail" placeholder="Email (required)"
-              style="background: rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.10); padding:10px 12px; border-radius:14px;" />
-
-            <div style="height:8px;"></div>
-
-            <input id="customerAddress" placeholder="Address / meetup spot (optional)"
-              style="background: rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.10); padding:10px 12px; border-radius:14px;" />
-
+            <input id="customerAddress" placeholder="Address / meetup spot (optional)" style="background: rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.10); padding:10px 12px; border-radius:14px;" />
             <div style="height:10px;"></div>
-
-            <textarea id="messageBox" placeholder="Your receipt / order details will appear here after placing the order…"></textarea>
-
+            <textarea id="messageBox" placeholder="Click “Build order message” to generate a text you can send in DM…"></textarea>
             <div class="row" style="margin-top:10px;">
               <button class="btn secondary" id="copyBtn">Copy</button>
             </div>
-
             <div class="tiny" style="margin-top:8px;opacity:.95">
-              After you place the order, you’ll see the receipt text here too.
+              You can paste this into Marketplace/Nextdoor/text — or hit “Email order”.
             </div>
           </div>
         </div>
@@ -459,27 +437,23 @@
     })();
 
     // =========================
-    // ORDER BACKEND (Apps Script)
-    // =========================
-    // Paste your deployed Google Apps Script Web App URL here:
-    const ORDER_API_URL = "https://script.google.com/macros/s/AKfycbyU0NAzjMwiPgMCdDTLKohmDiNA1Ww4NVNaLHxpG91cS184Ho2WNKnTGUTpY0cWXgKr/exec";
-
-    // =========================
     // SHOP SETTINGS
     // =========================
     const SHOP = {
       name: "Local Layer Prints",
       tagline: "Local pickup or delivery",
       deliveryFee: 3,
-      neighborhood: "Local area"
+      neighborhood: "Local area",
+      orderEmailTo: "thelocallayerprints3d@gmail.com",
+      orderEmailSubject: "Order request The Local Layer"
     };
 
-    // ✅ Added WHITE
-    const COLOR_OPTIONS = ["White", "Orange", "Blue", "Red", "Gold", "Grey"];
+    // Color options (allowed)
+    const COLOR_OPTIONS = ["Orange", "Blue", "Red", "Gold", "Grey", "White", "Black"];
 
-    // OUT OF STOCK COLORS (loaded from data.json)
-    let OUT_OF_STOCK_COLORS = new Set(["Red"]); // default fallback
-
+    // OUT OF STOCK COLORS
+    // Create data.json like: { "outOfStockColors": ["Red"] }
+    let OUT_OF_STOCK_COLORS = new Set(["Red"]);
     (async function loadOutOfStock() {
       try {
         const res = await fetch("data.json?v=" + Date.now(), { cache: "no-store" });
@@ -489,7 +463,7 @@
         renderProducts();
         renderCart();
       } catch (e) {
-        // keep defaults
+        // Keep defaults if JSON isn't there
       }
     })();
 
@@ -541,28 +515,28 @@
         options: { color: true }
       },
 
-      // ✅ NEW PRODUCT: Toothpaste squeezer
+      <!-- NEW: Toothpaste Squeezer -->
       {
         id: "toothpaste-squeezer",
         name: "Toothpaste Squeezer",
         basePrice: 3,
         category: "Bathroom",
-        tags: ["Toothpaste", "Squeezer"],
-        desc: "Choose a color. Makes it easy to squeeze every last drop.",
-        images: ["toothpaste.png"],
+        tags: ["Bathroom", "Squeezer"],
+        desc: "Choose a color. Helps squeeze the most out of your toothpaste tube.",
+        images: ["8ec2b103-733a-4b0e-a8ee-0d748520655a.png"],
         options: { color: true }
       },
 
-      // ✅ NEW PRODUCT: EDC tray with 2 color choices
+      <!-- NEW: EDC Adventure Catch-All Tray (dual color) -->
       {
         id: "edc-adventure-tray",
         name: "EDC Adventure Catch-All Tray",
         basePrice: 12,
         category: "Everyday Carry",
-        tags: ["EDC", "Tray", "Topographic"],
-        desc: "Choose TWO colors: base + topographic lines (dual-color like the photo).",
-        images: ["tray.png"],
-        options: { baseColor: true, lineColor: true }
+        tags: ["Tray", "EDC", "Dual Color"],
+        desc: "Choose 2 colors: base + topographical lines/outline (dual-color like the photo).",
+        images: ["bd1d1ea9-9fb9-4537-91b8-0f852c18fd6b.png"],
+        options: { color: true, color2: true, colorLabel: "Base color", color2Label: "Topo lines color" }
       },
 
       {
@@ -584,17 +558,15 @@
     const $ = (sel) => document.querySelector(sel);
     const fmt = (n) => `$${(Math.round(n * 100) / 100).toFixed(2)}`;
 
-    // key = id|color|capacity|baseColor|lineColor
-    const cart = new Map(); // key -> item object
+    // key = id|color|color2|capacity
+    const cart = new Map(); // key -> { key, id, qty, color, color2, capacity, customNote }
 
-    function showNotice(text, type="ok"){
-      const el = $("#actionNotice");
-      el.textContent = text;
-      el.classList.remove("danger");
-      if (type === "danger") el.classList.add("danger");
-      el.style.display = "block";
-      clearTimeout(showNotice._t);
-      showNotice._t = setTimeout(()=>{ el.style.display="none"; }, 4500);
+    function showActionNotice(text){
+      const box = $("#actionNotice");
+      box.textContent = text || "Add something to your cart first.";
+      box.style.display = "block";
+      clearTimeout(showActionNotice._t);
+      showActionNotice._t = setTimeout(()=>{ box.style.display = "none"; }, 3200);
     }
 
     function initShopUI(){
@@ -640,6 +612,14 @@
       return COLOR_OPTIONS[0];
     }
 
+    function getDefaultOptionsForProduct(p){
+      const color = (p.options && p.options.color) ? firstInStockColor() : null;
+      const color2 = (p.options && p.options.color2) ? firstInStockColor() : null;
+      const capacity = (p.options && p.options.capacity) ? p.options.capacity[0] : null;
+      const customNote = p.customRequest ? "" : null;
+      return { color, color2, capacity, customNote };
+    }
+
     function getUnitPrice(p, opts){
       if (p.options && p.options.capacity){
         const cap = Number(opts.capacity);
@@ -648,15 +628,8 @@
       return Number(p.basePrice ?? 0);
     }
 
-    function makeCartKey(item){
-      const parts = [
-        item.id,
-        item.color || "",
-        item.capacity || "",
-        item.baseColor || "",
-        item.lineColor || ""
-      ];
-      return parts.join("|");
+    function makeCartKey(id, color, color2, capacity){
+      return `${id}|${color || ""}|${color2 || ""}|${capacity || ""}`;
     }
 
     function colorOptionsHtml(selected){
@@ -666,6 +639,14 @@
         const isSel = c === selected;
         return `<option value="${c}" ${isSel ? "selected":""} ${oos ? "disabled":""}>${label}</option>`;
       }).join("");
+    }
+
+    function priceLabelForProduct(p){
+      if (p.options && p.options.capacity){
+        const minCap = Math.min(...p.options.capacity);
+        return `From ${fmt(CAPACITY_PRICE[minCap])}`;
+      }
+      return fmt(Number(p.basePrice ?? 0));
     }
 
     function renderProducts(){
@@ -679,6 +660,7 @@
 
         const imgs = (p.images && p.images.length) ? p.images : [];
         const main = imgs[0] || "";
+        const defaults = getDefaultOptionsForProduct(p);
 
         const capOptionsHtml = (p.options && p.options.capacity) ? `
           <div class="opt">
@@ -693,19 +675,35 @@
           ? `<span class="oos-tag">Some colors out of stock</span>`
           : "";
 
-        const defaultColor = firstInStockColor();
+        const color1Html = p.options?.color ? `
+          <div class="opt">
+            <label>${p.options.colorLabel || "Color"}</label>
+            <select data-opt-color="${p.id}">
+              ${colorOptionsHtml(defaults.color)}
+            </select>
+          </div>
+        ` : "";
+
+        const color2Html = p.options?.color2 ? `
+          <div class="opt">
+            <label>${p.options.color2Label || "Second color"}</label>
+            <select data-opt-color2="${p.id}">
+              ${colorOptionsHtml(defaults.color2)}
+            </select>
+          </div>
+        ` : "";
 
         el.innerHTML = `
           <div class="media">
             ${main ? `
               <div class="mainimg">
-                <img src="${main}" alt="${p.name}" data-main-img="${p.id}">
+                <img data-main-img="${p.id}" src="${main}" alt="${p.name}">
               </div>
             ` : ""}
             ${imgs.length > 1 ? `
-              <div class="thumbs" data-thumbs="${p.id}">
+              <div class="thumbs">
                 ${imgs.map((img,i)=>`
-                  <button class="thumbbtn ${i===0?'active':''}" data-thumb="${p.id}" data-img="${img}" type="button">
+                  <button class="thumbbtn ${i===0?'active':''}" data-thumb-for="${p.id}" data-img="${img}" title="View image">
                     <img src="${img}" alt="">
                   </button>
                 `).join("")}
@@ -716,7 +714,7 @@
           <div class="content">
             <div class="row">
               <strong>${p.name}</strong>
-              <span class="price">${p.basePrice !== null ? fmt(p.basePrice) : ""}</span>
+              <span class="price">${priceLabelForProduct(p)}</span>
             </div>
 
             <div class="muted">${p.desc}</div>
@@ -727,33 +725,8 @@
             </div>
 
             <div class="options">
-              ${p.options?.color ? `
-                <div class="opt">
-                  <label>Color</label>
-                  <select data-opt-color="${p.id}">
-                    ${colorOptionsHtml(defaultColor)}
-                  </select>
-                </div>
-              ` : ""}
-
-              ${p.options?.baseColor ? `
-                <div class="opt">
-                  <label>Base color</label>
-                  <select data-opt-basecolor="${p.id}">
-                    ${colorOptionsHtml(defaultColor)}
-                  </select>
-                </div>
-              ` : ""}
-
-              ${p.options?.lineColor ? `
-                <div class="opt">
-                  <label>Lines color</label>
-                  <select data-opt-linecolor="${p.id}">
-                    ${colorOptionsHtml(defaultColor === "Gold" ? firstInStockColor() : "Gold")}
-                  </select>
-                </div>
-              ` : ""}
-
+              ${color1Html}
+              ${color2Html}
               ${capOptionsHtml}
 
               ${p.customRequest ? `
@@ -765,7 +738,7 @@
             </div>
 
             <div class="actions">
-              <button class="btn" data-add="${p.id}" type="button">Add</button>
+              <button class="btn" data-add="${p.id}">Add</button>
             </div>
           </div>
         `;
@@ -791,27 +764,21 @@
         const price = getUnitPrice(p, item);
         subtotal += price * item.qty;
 
-        const optLine = (() => {
-          if (item.baseColor || item.lineColor){
-            return `<div class="tiny">Base: ${item.baseColor || ""} • Lines: ${item.lineColor || ""}</div>`;
-          }
-          const bits = [];
-          if (item.color) bits.push(item.color);
-          if (item.capacity) bits.push(item.capacity);
-          return `<div class="tiny">${bits.join(" • ")}</div>`;
-        })();
+        const colorText = item.color ? item.color : "";
+        const color2Text = item.color2 ? ` • Lines: ${item.color2}` : "";
+        const capText = item.capacity ? ` • ${item.capacity}` : "";
 
         const div = document.createElement("div");
         div.className = "cartline";
         div.innerHTML = `
           <div>
             <strong>${p.name}</strong>
-            ${optLine}
+            <div class="tiny">${colorText}${color2Text}${capText}</div>
             ${item.customNote ? `<div class="tiny">"${item.customNote}"</div>` : ""}
             <div class="qty">
-              <button data-dec="${item.key}" type="button">−</button>
+              <button data-dec="${item.key}">−</button>
               <strong>${item.qty}</strong>
-              <button data-inc="${item.key}" type="button">+</button>
+              <button data-inc="${item.key}">+</button>
             </div>
           </div>
           <strong>${fmt(price * item.qty)}</strong>
@@ -825,217 +792,117 @@
 
     function addToCart(id){
       const p = PRODUCTS.find(x=>x.id===id);
-
       const color = document.querySelector(`[data-opt-color="${id}"]`)?.value || null;
+      const color2 = document.querySelector(`[data-opt-color2="${id}"]`)?.value || null;
       const capacity = document.querySelector(`[data-opt-capacity="${id}"]`)?.value || null;
-      const baseColor = document.querySelector(`[data-opt-basecolor="${id}"]`)?.value || null;
-      const lineColor = document.querySelector(`[data-opt-linecolor="${id}"]`)?.value || null;
       const customNote = document.querySelector(`[data-opt-custom="${id}"]`)?.value || null;
 
-      const item = {
-        id,
-        qty: 1,
-        color,
-        capacity,
-        baseColor,
-        lineColor,
-        customNote
-      };
-      item.key = makeCartKey(item);
-
-      if (cart.has(item.key)) {
-        cart.get(item.key).qty++;
+      const key = makeCartKey(id, color, color2, capacity);
+      if (cart.has(key)) {
+        cart.get(key).qty++;
       } else {
-        cart.set(item.key, item);
+        cart.set(key, { key, id, qty:1, color, color2, capacity, customNote });
       }
       renderCart();
     }
 
-    function buildReceiptText(){
-      let msg = `${SHOP.name} Order Receipt\n\n`;
+    function buildOrderMessage(){
+      if (!cart.size){
+        showActionNotice("Add something to your cart first.");
+        return;
+      }
 
+      let msg = `${SHOP.name} Order Request\n\n`;
       cart.forEach(item=>{
         const p = PRODUCTS.find(x=>x.id===item.id);
         msg += `${item.qty}x ${p.name}`;
 
-        if (item.baseColor || item.lineColor){
-          msg += ` (Base: ${item.baseColor || ""}, Lines: ${item.lineColor || ""})`;
-        } else if (item.color){
-          msg += ` (${item.color})`;
-        }
-
+        if (item.color) msg += ` (Base: ${item.color})`;
+        if (item.color2) msg += ` (Lines: ${item.color2})`;
         if (item.capacity) msg += ` – Holds ${item.capacity}`;
         if (item.customNote) msg += `\nNote: ${item.customNote}`;
         msg += "\n\n";
       });
 
-      msg += $("#deliveryRadio").checked ? "Fulfillment: Delivery\n" : "Fulfillment: Pickup\n";
+      msg += $("#deliveryRadio").checked ? "Delivery\n" : "Pickup\n";
       msg += `Total: ${$("#totalPrice").textContent}\n`;
 
-      const name = $("#customerName").value.trim();
-      const email = $("#customerEmail").value.trim();
-      const addr = $("#customerAddress").value.trim();
+      if ($("#customerName").value) msg += `\nName: ${$("#customerName").value}`;
+      if ($("#customerAddress").value) msg += `\nAddress: ${$("#customerAddress").value}`;
 
-      if (name) msg += `\nName: ${name}`;
-      if (email) msg += `\nEmail: ${email}`;
-      if (addr) msg += `\nAddress: ${addr}`;
-
-      return msg.trim();
+      $("#messageBox").value = msg.trim();
     }
 
-    function validEmail(email){
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    function emailOrder(){
+      if (!cart.size){
+        showActionNotice("Add something to your cart first.");
+        return;
+      }
+
+      // Always build a fresh message before emailing
+      buildOrderMessage();
+
+      const bodyText = $("#messageBox").value || "";
+      if (!bodyText.trim()){
+        showActionNotice("Build your order message first.");
+        return;
+      }
+
+      const body = encodeURIComponent(bodyText);
+      location.href = `mailto:${SHOP.orderEmailTo}?subject=${encodeURIComponent(SHOP.orderEmailSubject)}&body=${body}`;
     }
-
-    async function placeOrder(){
-  if (!cart.size){
-    showNotice("Add something to your cart first.", "danger");
-    return;
-  }
-
-  const name = $("#customerName").value.trim();
-  const email = $("#customerEmail").value.trim();
-  const address = $("#customerAddress").value.trim();
-
-  if (!name){
-    showNotice("Please enter your name first.", "danger");
-    return;
-  }
-  if (!email || !validEmail(email)){
-    showNotice("Please enter a valid email address.", "danger");
-    return;
-  }
-
-  // Build receipt text for the textarea
-  const receipt = buildReceiptText();
-  $("#messageBox").value = receipt;
-
-  // Compute numeric total + numeric delivery fee
-  const deliveryFee = $("#deliveryRadio").checked ? SHOP.deliveryFee : 0;
-
-  // subtotal by walking cart
-  let subtotal = 0;
-  cart.forEach(item => {
-    const p = PRODUCTS.find(x => x.id === item.id);
-    const unit = getUnitPrice(p, item);
-    subtotal += unit * item.qty;
-  });
-  const totalNumber = subtotal + deliveryFee;
-
-  // Payload EXACTLY like your Apps Script expects
-  const order = {
-    shopName: SHOP.name,
-    fulfillment: $("#deliveryRadio").checked ? "Delivery" : "Pickup",
-    deliveryFee: deliveryFee,
-    total: totalNumber,
-    customer: { name, email, address },
-    items: Array.from(cart.values()).map(it => {
-      const p = PRODUCTS.find(pp => pp.id === it.id);
-      const unit = getUnitPrice(p, it);
-      const lineTotal = unit * it.qty;
-
-      return {
-        name: p ? p.name : it.id,
-        qty: it.qty,
-        unitPrice: unit,
-        lineTotal: lineTotal,
-
-        // options
-        color: it.color || "",
-        capacity: it.capacity || "",
-        baseColor: it.baseColor || "",
-        lineColor: it.lineColor || "",
-
-        // note (your script expects customNote)
-        customNote: it.customNote || ""
-      };
-    })
-  };
-
-  const btn = $("#placeOrderBtn");
-  btn.disabled = true;
-
-  try{
-    const res = await fetch(ORDER_API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(order)
-    });
-
-    // If CORS blocks reading res, this may throw on res.json().
-    // We'll treat 200+ as success and fall back gracefully.
-    let ok = true;
-    try {
-      const out = await res.json();
-      ok = !!out.ok;
-      if (!ok) throw new Error(out.error || "Unknown server error");
-    } catch (e) {
-      // If we can't read JSON due to CORS but the request went through,
-      // user will still receive email. We'll show success.
-    }
-
-    showNotice(`✅ Your order has been placed! Please check your email (${email}) for confirmation and payment options.`, "ok");
-  } catch (err){
-    console.error(err);
-    showNotice("Could not send the order right now. Please try again.", "danger");
-  } finally {
-    btn.disabled = false;
-  }
-}
-
 
     // =========================
     // EVENTS
     // =========================
     document.addEventListener("click", e=>{
-      // Add
-      if (e.target?.dataset?.add) addToCart(e.target.dataset.add);
+      // Add/inc/dec
+      if (e.target.dataset.add) addToCart(e.target.dataset.add);
 
-      // Qty inc/dec
-      if (e.target?.dataset?.inc) { cart.get(e.target.dataset.inc).qty++; renderCart(); }
-      if (e.target?.dataset?.dec) {
+      if (e.target.dataset.inc) {
+        cart.get(e.target.dataset.inc).qty++;
+        renderCart();
+      }
+
+      if (e.target.dataset.dec) {
         const it = cart.get(e.target.dataset.dec);
         if (--it.qty <= 0) cart.delete(it.key);
         renderCart();
       }
 
-      // Thumbnails
-      if (e.target?.closest?.("[data-thumb]")){
-        const btn = e.target.closest("[data-thumb]");
-        const pid = btn.dataset.thumb;
-        const img = btn.dataset.img;
-        const main = document.querySelector(`[data-main-img="${pid}"]`);
-        if (main) main.src = img;
+      // Thumbnail switching
+      const thumb = e.target.closest(".thumbbtn");
+      if (thumb && thumb.dataset.thumbFor && thumb.dataset.img){
+        const pid = thumb.dataset.thumbFor;
+        const mainImg = document.querySelector(`img[data-main-img="${pid}"]`);
+        if (mainImg) mainImg.src = thumb.dataset.img;
 
-        // active outline
-        const row = document.querySelector(`[data-thumbs="${pid}"]`);
-        if (row){
-          row.querySelectorAll(".thumbbtn").forEach(b=>b.classList.remove("active"));
-          btn.classList.add("active");
-        }
+        const siblings = thumb.parentElement?.querySelectorAll(".thumbbtn") || [];
+        siblings.forEach(b=>b.classList.remove("active"));
+        thumb.classList.add("active");
       }
     });
 
-    $("#placeOrderBtn").onclick = placeOrder;
+    $("#buildMessageBtn").onclick = buildOrderMessage;
+    $("#emailBtn").onclick = emailOrder;
 
     $("#clearCartBtn").onclick = () => {
       cart.clear();
       $("#messageBox").value = "";
       $("#customerName").value = "";
-      $("#customerEmail").value = "";
       $("#customerAddress").value = "";
+      $("#actionNotice").style.display = "none";
       renderCart();
-      showNotice("Cleared.", "ok");
     };
 
     $("#copyBtn").onclick = () => {
-      const txt = $("#messageBox").value || "";
-      if (!txt.trim()){
-        showNotice("Nothing to copy yet.", "danger");
+      const t = $("#messageBox").value || "";
+      if (!t.trim()){
+        showActionNotice("Build your order message first.");
         return;
       }
-      navigator.clipboard.writeText(txt);
-      showNotice("Copied to clipboard.", "ok");
+      navigator.clipboard.writeText(t);
+      showActionNotice("Copied!");
     };
 
     $("#pickupRadio").onchange = renderCart;
@@ -1053,5 +920,3 @@
   </script>
 </body>
 </html>
-
-
