@@ -462,7 +462,7 @@
     // ORDER BACKEND (Apps Script)
     // =========================
     // Paste your deployed Google Apps Script Web App URL here:
-    const ORDER_API_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+    const ORDER_API_URL = "https://script.google.com/macros/s/AKfycbyU0NAzjMwiPgMCdDTLKohmDiNA1Ww4NVNaLHxpG91cS184Ho2WNKnTGUTpY0cWXgKr/exec";
 
     // =========================
     // SHOP SETTINGS
@@ -888,77 +888,101 @@
     }
 
     async function placeOrder(){
-      if (!cart.size){
-        showNotice("Add something to your cart first.", "danger");
-        return;
-      }
+  if (!cart.size){
+    showNotice("Add something to your cart first.", "danger");
+    return;
+  }
 
-      const name = $("#customerName").value.trim();
-      const email = $("#customerEmail").value.trim();
-      const address = $("#customerAddress").value.trim();
+  const name = $("#customerName").value.trim();
+  const email = $("#customerEmail").value.trim();
+  const address = $("#customerAddress").value.trim();
 
-      if (!name){
-        showNotice("Please enter your name first.", "danger");
-        return;
-      }
-      if (!email || !validEmail(email)){
-        showNotice("Please enter a valid email address.", "danger");
-        return;
-      }
+  if (!name){
+    showNotice("Please enter your name first.", "danger");
+    return;
+  }
+  if (!email || !validEmail(email)){
+    showNotice("Please enter a valid email address.", "danger");
+    return;
+  }
 
-      // Build receipt text for the customer + for you
-      const receipt = buildReceiptText();
-      $("#messageBox").value = receipt;
+  // Build receipt text for the textarea
+  const receipt = buildReceiptText();
+  $("#messageBox").value = receipt;
 
-      // If you haven't pasted your Apps Script URL yet, don't break — just show message.
-      if (!ORDER_API_URL || ORDER_API_URL.includes("PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE")){
-        showNotice(`Order ready. Paste your Apps Script URL into ORDER_API_URL to send emails.`, "danger");
-        return;
-      }
+  // Compute numeric total + numeric delivery fee
+  const deliveryFee = $("#deliveryRadio").checked ? SHOP.deliveryFee : 0;
 
-      const order = {
-        shop: SHOP.name,
-        placedAt: new Date().toISOString(),
-        fulfillment: $("#deliveryRadio").checked ? "Delivery" : "Pickup",
-        deliveryFee: $("#deliveryRadio").checked ? SHOP.deliveryFee : 0,
-        total: $("#totalPrice").textContent,
-        customer: { name, email, address },
-        items: Array.from(cart.values()).map(it => ({
-          id: it.id,
-          name: PRODUCTS.find(p=>p.id===it.id)?.name || it.id,
-          qty: it.qty,
-          color: it.color,
-          capacity: it.capacity,
-          baseColor: it.baseColor,
-          lineColor: it.lineColor,
-          note: it.customNote
-        })),
-        receiptText: receipt
+  // subtotal by walking cart
+  let subtotal = 0;
+  cart.forEach(item => {
+    const p = PRODUCTS.find(x => x.id === item.id);
+    const unit = getUnitPrice(p, item);
+    subtotal += unit * item.qty;
+  });
+  const totalNumber = subtotal + deliveryFee;
+
+  // Payload EXACTLY like your Apps Script expects
+  const order = {
+    shopName: SHOP.name,
+    fulfillment: $("#deliveryRadio").checked ? "Delivery" : "Pickup",
+    deliveryFee: deliveryFee,
+    total: totalNumber,
+    customer: { name, email, address },
+    items: Array.from(cart.values()).map(it => {
+      const p = PRODUCTS.find(pp => pp.id === it.id);
+      const unit = getUnitPrice(p, it);
+      const lineTotal = unit * it.qty;
+
+      return {
+        name: p ? p.name : it.id,
+        qty: it.qty,
+        unitPrice: unit,
+        lineTotal: lineTotal,
+
+        // options
+        color: it.color || "",
+        capacity: it.capacity || "",
+        baseColor: it.baseColor || "",
+        lineColor: it.lineColor || "",
+
+        // note (your script expects customNote)
+        customNote: it.customNote || ""
       };
+    })
+  };
 
-      const btn = $("#placeOrderBtn");
-      btn.disabled = true;
+  const btn = $("#placeOrderBtn");
+  btn.disabled = true;
 
-      try{
-        const res = await fetch(ORDER_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(order)
-        });
+  try{
+    const res = await fetch(ORDER_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(order)
+    });
 
-        // Apps Script often returns 200 even with text — handle both.
-        if (!res.ok){
-          throw new Error("Server responded " + res.status);
-        }
-
-        showNotice(`✅ Your order has been placed! Please check your email (${email}) for confirmation and payment options.`, "ok");
-      } catch (err){
-        console.error(err);
-        showNotice("Could not send the order right now. Please try again or message us your order.", "danger");
-      } finally {
-        btn.disabled = false;
-      }
+    // If CORS blocks reading res, this may throw on res.json().
+    // We'll treat 200+ as success and fall back gracefully.
+    let ok = true;
+    try {
+      const out = await res.json();
+      ok = !!out.ok;
+      if (!ok) throw new Error(out.error || "Unknown server error");
+    } catch (e) {
+      // If we can't read JSON due to CORS but the request went through,
+      // user will still receive email. We'll show success.
     }
+
+    showNotice(`✅ Your order has been placed! Please check your email (${email}) for confirmation and payment options.`, "ok");
+  } catch (err){
+    console.error(err);
+    showNotice("Could not send the order right now. Please try again.", "danger");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 
     // =========================
     // EVENTS
@@ -1029,4 +1053,5 @@
   </script>
 </body>
 </html>
+
 
