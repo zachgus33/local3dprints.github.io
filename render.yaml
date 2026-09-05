@@ -17,6 +17,8 @@ services:
         value: /var/data/orders.sqlite
       - key: APP_URL
         sync: false
+      - key: SITE_URL
+        value: https://thelocalayer.com
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET

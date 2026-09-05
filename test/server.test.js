@@ -43,6 +43,20 @@ test("storefront, quote workflow, and authenticated admin workflow", async () =>
   assert.equal(catalog.response.status, 200);
   assert.equal(catalog.body.products.length, 9);
 
+  const productPage = await fetch(`${baseUrl}/products/pacman-clock`);
+  assert.equal(productPage.status, 200);
+  assert.match(await productPage.text(), /Pac-Man Clock \| Jacksonville 3D Printing/);
+
+  const sitemap = await fetch(`${baseUrl}/sitemap.xml`);
+  assert.equal(sitemap.status, 200);
+  assert.match(await sitemap.text(), /products\/tabletop-water-fountain/);
+
+  const analyticsEvent = await json("/api/analytics/event", {
+    method: "POST",
+    body: JSON.stringify({ eventName: "page_view", source: "integration-test", path: "/" })
+  });
+  assert.equal(analyticsEvent.response.status, 204);
+
   const quote = await json("/api/quotes", {
     method: "POST",
     body: JSON.stringify({
@@ -52,7 +66,16 @@ test("storefront, quote workflow, and authenticated admin workflow", async () =>
       fulfillment: "pickup",
       address: "",
       customerNotes: "",
-      details: "A replacement bracket approximately three inches wide."
+      details: "A replacement bracket approximately three inches wide.",
+      approximateSize: "3 × 2 × 1 inches",
+      neededBy: "2026-10-01",
+      budget: "Around $20",
+      uploads: [{
+        name: "reference.obj",
+        type: "model/obj",
+        size: 18,
+        data: Buffer.from("v 0 0 0\nv 1 0 0\n").toString("base64")
+      }]
     })
   });
   assert.equal(quote.response.status, 201);
@@ -72,6 +95,13 @@ test("storefront, quote workflow, and authenticated admin workflow", async () =>
   assert.equal(orders.response.status, 200);
   assert.equal(orders.body.orders.length, 1);
   assert.equal(orders.body.orders[0].status, "quote_requested");
+  assert.equal(orders.body.orders[0].attachments.length, 1);
+  assert.match(orders.body.orders[0].items[0].details, /Budget: Around \$20/);
+  assert.equal(orders.body.analytics.pageViews, 1);
+
+  const attachment = await fetch(`${baseUrl}/api/admin/attachments/${orders.body.orders[0].attachments[0].id}`, { headers: { Cookie: cookie } });
+  assert.equal(attachment.status, 200);
+  assert.equal(await attachment.text(), "v 0 0 0\nv 1 0 0\n");
 
   const update = await json(`/api/admin/orders/${quote.body.orderId}`, {
     method: "PATCH",

@@ -5,6 +5,28 @@ const state = {
   category: "All",
   search: ""
 };
+const viewedProducts = new Set();
+
+function trafficSource() {
+  const params = new URLSearchParams(window.location.search);
+  const tagged = params.get("utm_source");
+  if (tagged) sessionStorage.setItem("llp_source", tagged.slice(0, 60));
+  if (sessionStorage.getItem("llp_source")) return sessionStorage.getItem("llp_source");
+  try {
+    return document.referrer ? new URL(document.referrer).hostname.slice(0, 60) : "direct";
+  } catch {
+    return "direct";
+  }
+}
+
+function track(eventName, productId = "") {
+  fetch("/api/analytics/event", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ eventName, productId, source: trafficSource(), path: window.location.pathname }),
+    keepalive: true
+  }).catch(() => {});
+}
 
 const elements = {
   productGrid: document.querySelector("#productGrid"),
@@ -109,9 +131,15 @@ function renderCategories() {
   }));
 }
 
-function makeSelect(labelText, values, selected, formatter) {
+function colorClass(value) {
+  return `swatch-${String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+}
+
+function makeSelect(labelText, values, selected, formatter, swatches = false) {
   const label = makeElement("label", "product-option");
+  if (swatches) label.classList.add("color-option");
   label.append(makeElement("span", "", labelText));
+  const row = makeElement("div", swatches ? "select-with-swatch" : "");
   const select = document.createElement("select");
   for (const value of values) {
     const option = document.createElement("option");
@@ -120,12 +148,19 @@ function makeSelect(labelText, values, selected, formatter) {
     option.selected = String(value) === String(selected);
     select.append(option);
   }
-  label.append(select);
+  if (swatches) {
+    const dot = makeElement("i", `color-swatch ${colorClass(select.value)}`);
+    select.addEventListener("change", () => { dot.className = `color-swatch ${colorClass(select.value)}`; });
+    row.append(dot);
+  }
+  row.append(select);
+  label.append(row);
   return { label, select };
 }
 
 function renderProduct(product, index) {
   const card = makeElement("article", "product-card");
+  card.dataset.productId = product.id;
   const media = makeElement("div", "product-media");
   const image = document.createElement("img");
   image.src = product.images[0];
@@ -154,7 +189,10 @@ function renderProduct(product, index) {
 
   const info = makeElement("div", "product-info");
   const heading = makeElement("div", "product-heading");
-  const title = makeElement("h3", "", product.name);
+  const title = makeElement("h3", "");
+  const titleLink = makeElement("a", "", product.name);
+  titleLink.href = `/products/${encodeURIComponent(product.id)}`;
+  title.append(titleLink);
   const price = makeElement("strong", "", product.capacityPrices ? `From ${money(startingPrice(product))}` : money(product.priceCents));
   heading.append(title, price);
   info.append(heading, makeElement("p", "product-description", product.description));
@@ -162,6 +200,9 @@ function renderProduct(product, index) {
   const tags = makeElement("div", "product-tags");
   product.tags.forEach((tag) => tags.append(makeElement("span", "", tag)));
   info.append(tags);
+  const detailLink = makeElement("a", "product-detail-link", "View details, dimensions & what’s included →");
+  detailLink.href = `/products/${encodeURIComponent(product.id)}`;
+  info.append(detailLink);
 
   const options = makeElement("div", "product-options");
   const availableColors = state.shop.colors.filter((color) => !state.shop.outOfStockColors.includes(color));
@@ -170,12 +211,12 @@ function renderProduct(product, index) {
   let capacitySelect;
 
   if (product.options?.color) {
-    const field = makeSelect(product.options.colorLabel || "Color", availableColors, availableColors[0]);
+    const field = makeSelect(product.options.colorLabel || "Color", availableColors, availableColors[0], null, true);
     colorSelect = field.select;
     options.append(field.label);
   }
   if (product.options?.color2) {
-    const field = makeSelect(product.options.color2Label || "Second color", availableColors, availableColors[1] || availableColors[0]);
+    const field = makeSelect(product.options.color2Label || "Second color", availableColors, availableColors[1] || availableColors[0], null, true);
     color2Select = field.select;
     options.append(field.label);
   }
@@ -231,6 +272,23 @@ function renderProducts() {
     return;
   }
   elements.productGrid.replaceChildren(...filtered.map(renderProduct));
+  observeProductCards();
+}
+
+function observeProductCards() {
+  if (!("IntersectionObserver" in window)) return;
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      const productId = entry.target.dataset.productId;
+      if (!viewedProducts.has(productId)) {
+        viewedProducts.add(productId);
+        track("product_view", productId);
+      }
+      observer.unobserve(entry.target);
+    }
+  }, { threshold: 0.55 });
+  elements.productGrid.querySelectorAll(".product-card").forEach((card) => observer.observe(card));
 }
 
 function addToCart(item) {
@@ -242,6 +300,7 @@ function addToCart(item) {
   renderCart();
   openCart();
   showToast("Added to your cart");
+  track("add_to_cart", item.id);
 }
 
 function updateQuantity(key, change) {
@@ -395,6 +454,11 @@ async function handleCheckoutReturn() {
         title: "Order confirmed",
         message: `${data.order.id} is paid and in our queue. We’ll follow up about ${data.order.fulfillment}.`
       });
+      const purchaseKey = `llp_purchase_${data.order.id}`;
+      if (!sessionStorage.getItem(purchaseKey)) {
+        sessionStorage.setItem(purchaseKey, "1");
+        track("purchase_completed");
+      }
     } else {
       showStatus({
         title: "Payment is processing",
@@ -413,6 +477,7 @@ async function handleCheckoutReturn() {
 
 async function initialize() {
   document.querySelector("#currentYear").textContent = new Date().getFullYear();
+  track("page_view");
   try {
     const response = await fetch("/api/catalog");
     if (!response.ok) throw new Error("Catalog unavailable");
@@ -422,11 +487,23 @@ async function initialize() {
     const email = document.querySelector("#footerEmail");
     email.textContent = state.shop.email;
     email.href = `mailto:${state.shop.email}`;
+    for (const network of ["instagram", "facebook"]) {
+      const link = document.querySelector(`#${network}Link`);
+      const url = state.shop.social?.[network];
+      if (link && url) {
+        link.href = url;
+        link.hidden = false;
+      }
+    }
     document.querySelector("#deliveryFeeText").textContent = money(state.shop.deliveryFeeCents).replace(".00", "");
     renderCategories();
     renderProducts();
     renderCart();
     await handleCheckoutReturn();
+    if (new URLSearchParams(window.location.search).get("cart") === "open") {
+      openCart();
+      window.history.replaceState({}, "", window.location.pathname);
+    }
   } catch (error) {
     elements.productGrid.replaceChildren(makeElement("div", "empty-products", "The collection is temporarily unavailable. Please refresh in a moment."));
     console.error(error);
@@ -442,6 +519,7 @@ document.querySelector("#closeCartButton").addEventListener("click", closeCart);
 elements.drawerBackdrop.addEventListener("click", closeCart);
 document.querySelector("#beginCheckoutButton").addEventListener("click", () => {
   if (!state.cart.length) return;
+  track("checkout_started");
   elements.checkoutError.textContent = "";
   elements.checkoutTotal.textContent = money(cartSubtotal());
   openModal(elements.checkoutModal);
@@ -449,10 +527,42 @@ document.querySelector("#beginCheckoutButton").addEventListener("click", () => {
 
 document.querySelectorAll("[data-open-quote]").forEach((button) => {
   button.addEventListener("click", () => {
+    track("custom_request_click");
     elements.quoteError.textContent = "";
     openModal(elements.quoteModal);
   });
 });
+
+const uploadInput = elements.quoteForm.elements.uploads;
+const selectedFiles = document.querySelector("#selectedFiles");
+uploadInput.addEventListener("change", () => {
+  const files = [...uploadInput.files];
+  selectedFiles.replaceChildren(...files.map((file) => makeElement("span", "", `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB`)));
+});
+
+function encodeFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resolve({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      data: String(reader.result).split(",")[1] || ""
+    }));
+    reader.addEventListener("error", () => reject(new Error(`Could not read ${file.name}.`)));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function quotePayload(form) {
+  const data = new FormData(form);
+  const files = [...form.elements.uploads.files];
+  if (files.length > 5) throw new Error("Attach up to 5 files.");
+  if (files.some((file) => file.size > 5 * 1024 * 1024)) throw new Error("Each attachment must be 5 MB or smaller.");
+  const payload = Object.fromEntries([...data.entries()].filter(([key]) => key !== "uploads"));
+  payload.uploads = await Promise.all(files.map(encodeFile));
+  return payload;
+}
 document.querySelectorAll("[data-close-modal]").forEach((button) => {
   button.addEventListener("click", () => button.closest("dialog").close());
 });
@@ -493,16 +603,17 @@ elements.checkoutForm.addEventListener("submit", async (event) => {
 
 elements.quoteForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const data = new FormData(elements.quoteForm);
   const button = document.querySelector("#quoteButton");
   elements.quoteError.textContent = "";
   button.disabled = true;
   button.firstChild.textContent = "Sending request… ";
   try {
-    const result = await submitJson("/api/quotes", Object.fromEntries(data.entries()));
+    const result = await submitJson("/api/quotes", await quotePayload(elements.quoteForm));
     elements.quoteModal.close();
     elements.quoteForm.reset();
     toggleDeliveryFields(elements.quoteForm, quoteAddressField);
+    selectedFiles.replaceChildren();
+    track("custom_request_submitted");
     showStatus({
       title: "Request received",
       message: `${result.orderId} is in our queue. We’ll follow up by email with next steps.`

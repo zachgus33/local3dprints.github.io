@@ -10,8 +10,11 @@ A complete storefront and order system for a small 3D-print shop. Customers conf
 - Signed Stripe webhook handling for reliable payment confirmation
 - Local pickup or $3 local delivery
 - Custom-print quote requests
+- Private STL, 3MF, OBJ, and reference-image uploads on custom requests
+- Search-friendly individual product pages and structured metadata
+- Cookie-free first-party storefront and conversion analytics
 - Password-protected order dashboard at `/admin`
-- Order search, status workflow, revenue summary, and CSV export
+- Order search, uploaded-file downloads, status workflow, revenue summary, traffic metrics, and CSV export
 - SQLite order database with a Render persistent-disk deployment blueprint
 
 ## Run locally
@@ -63,6 +66,7 @@ Use Stripe's test card `4242 4242 4242 4242`, any future expiration date, and an
 
 5. Copy that live destination's signing secret to `STRIPE_WEBHOOK_SECRET`.
 6. Set `APP_URL` to the exact public origin, such as `https://shop.example.com`, with no trailing slash.
+   Set `SITE_URL` to the preferred public domain used for canonical and product-sharing links.
 7. Run one small live purchase and confirm it appears as paid at `/admin` before advertising the store.
 
 Product amounts are intentionally defined in [`lib/catalog.js`](./lib/catalog.js), not accepted from the browser. This prevents a shopper from editing the displayed price before checkout.
@@ -78,7 +82,9 @@ After the first deployment:
 3. Redeploy after changing environment variables.
 4. Visit `/api/health` and confirm that `stripeConfigured` and `adminConfigured` are both `true`.
 
-The existing GitHub Pages URL cannot run the Node.js order server. Host this project as a web service (the included Render setup does this) and point the shop's custom domain to that service. A persistent disk requires a paid Render service; without one, SQLite orders would disappear on a redeploy. For a higher-volume shop or multiple server instances, replace SQLite with managed Postgres.
+The existing GitHub Pages URL cannot run the Node.js order server. Host this project as a web service (the included Render setup does this) and point the shop's custom domain to that service. A persistent disk requires a paid Render service; without one, SQLite orders and custom-request uploads would disappear on a redeploy. For a higher-volume shop or multiple server instances, replace SQLite with managed Postgres and move uploads to object storage.
+
+Set `INSTAGRAM_URL` and `FACEBOOK_URL` in Render when those profiles are ready; valid values make the corresponding footer links appear automatically. Create and verify a mailbox such as `orders@thelocalayer.com` with the domain provider before changing `SHOP_EMAIL`—otherwise customer replies and order questions will be lost.
 
 ## Order workflow
 
@@ -94,6 +100,7 @@ Unpaid checkout sessions remain `Awaiting payment`. Custom requests enter as `Qu
 - Storefront content and layout: `public/index.html`
 - Storefront appearance: `public/styles.css`
 - Shop email: `SHOP_EMAIL` in the deployment environment
+- Instagram and Facebook profile links: `INSTAGRAM_URL` and `FACEBOOK_URL`
 - Delivery price: `deliveryFeeCents` in `lib/catalog.js`
 
 ## Security notes

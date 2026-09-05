@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api/admin/
+Sitemap: https://thelocalayer.com/sitemap.xml

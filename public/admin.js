@@ -94,6 +94,20 @@ function renderStats(stats) {
   document.querySelector("#statRevenue").textContent = money(stats.paidRevenueCents);
 }
 
+function renderAnalytics(analytics = {}) {
+  document.querySelector("#metricPageViews").textContent = analytics.pageViews || 0;
+  document.querySelector("#metricProductViews").textContent = analytics.productViews || 0;
+  document.querySelector("#metricQuoteClicks").textContent = analytics.customRequestClicks || 0;
+  document.querySelector("#metricAddToCart").textContent = analytics.addToCart || 0;
+  document.querySelector("#metricCheckout").textContent = analytics.checkoutStarted || 0;
+  document.querySelector("#metricPurchases").textContent = analytics.purchaseCompleted || 0;
+  document.querySelector("#metricQuotes").textContent = analytics.customRequestsSubmitted || 0;
+  const sources = analytics.sources || [];
+  document.querySelector("#trafficSources").textContent = sources.length
+    ? sources.map((entry) => `${entry.source}: ${entry.count}`).join(" · ")
+    : "No visits recorded yet.";
+}
+
 function isQuote(order) {
   return order.order_type === "quote";
 }
@@ -187,6 +201,19 @@ function openOrder(order) {
     return row;
   }));
 
+  const attachmentsSection = document.querySelector("#detailAttachmentsSection");
+  const attachments = document.querySelector("#detailAttachments");
+  attachmentsSection.hidden = !order.attachments?.length;
+  attachments.replaceChildren(...(order.attachments || []).map((attachment) => {
+    const link = makeElement("a", "attachment-link");
+    link.href = `/api/admin/attachments/${encodeURIComponent(attachment.id)}`;
+    link.append(
+      makeElement("strong", "", attachment.original_name),
+      makeElement("span", "", `${(attachment.size_bytes / 1024 / 1024).toFixed(2)} MB · Download →`)
+    );
+    return link;
+  }));
+
   const customer = document.querySelector("#detailCustomer");
   customer.replaceChildren(
     customerDetail("Name", order.customer_name),
@@ -216,6 +243,7 @@ async function loadOrders() {
     const data = await api(`/api/admin/orders?${query}`);
     state.orders = data.orders;
     renderStats(data.stats);
+    renderAnalytics(data.analytics);
     renderOrders();
   } catch (error) {
     if (error.status === 401) return showLogin("Your session expired. Sign in again.");
