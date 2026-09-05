@@ -1,4 +1,4 @@
-const state = { orders: [], selectedOrder: null };
+const state = { orders: [], selectedOrder: null, view: "all" };
 const elements = {
   loginScreen: document.querySelector("#loginScreen"),
   dashboard: document.querySelector("#dashboard"),
@@ -7,8 +7,10 @@ const elements = {
   ordersBody: document.querySelector("#ordersBody"),
   tableMessage: document.querySelector("#tableMessage"),
   resultCount: document.querySelector("#resultCount"),
+  orderPanelTitle: document.querySelector("#orderPanelTitle"),
   statusFilter: document.querySelector("#statusFilter"),
   orderSearch: document.querySelector("#orderSearch"),
+  orderTabs: [...document.querySelectorAll("[data-order-view]")],
   orderDialog: document.querySelector("#orderDialog"),
   statusForm: document.querySelector("#statusForm"),
   dialogError: document.querySelector("#dialogError"),
@@ -94,20 +96,94 @@ function renderStats(stats) {
   document.querySelector("#statRevenue").textContent = money(stats.paidRevenueCents);
 }
 
-function renderOrders() {
-  elements.ordersBody.replaceChildren();
-  elements.resultCount.textContent = `${state.orders.length} result${state.orders.length === 1 ? "" : "s"}`;
-  elements.tableMessage.hidden = state.orders.length > 0;
-  elements.tableMessage.textContent = "No orders match these filters.";
+function isQuote(order) {
+  return order.order_type === "quote";
+}
 
-  for (const order of state.orders) {
+function isPaidOpen(order) {
+  return !isQuote(order) && order.payment_status === "paid" && !["fulfilled", "canceled"].includes(order.status);
+}
+
+function matchesView(order) {
+  if (state.view === "quotes") return isQuote(order);
+  if (state.view === "paid_open") return isPaidOpen(order);
+  if (state.view === "fulfilled") return order.status === "fulfilled";
+  return true;
+}
+
+function orderGroup(order) {
+  if (isQuote(order)) return "quotes";
+  if (isPaidOpen(order)) return "paid_open";
+  if (order.status === "fulfilled") return "fulfilled";
+  return "other";
+}
+
+const groupLabels = {
+  quotes: "Quote requests",
+  paid_open: "Paid — needs fulfillment",
+  other: "Other orders",
+  fulfilled: "Fulfilled orders"
+};
+
+const groupPriority = { quotes: 0, paid_open: 1, other: 2, fulfilled: 3 };
+const viewTitles = { all: "All orders", quotes: "Quote requests", paid_open: "Paid & open", fulfilled: "Fulfilled orders" };
+
+function visibleOrders() {
+  const status = elements.statusFilter.value;
+  return state.orders
+    .filter((order) => matchesView(order) && (status === "all" || order.status === status))
+    .sort((left, right) => {
+      if (state.view === "all") {
+        const groupDifference = groupPriority[orderGroup(left)] - groupPriority[orderGroup(right)];
+        if (groupDifference) return groupDifference;
+      }
+      return new Date(right.created_at) - new Date(left.created_at);
+    });
+}
+
+function renderTabCounts() {
+  document.querySelector("#tabAllCount").textContent = state.orders.length;
+  document.querySelector("#tabQuoteCount").textContent = state.orders.filter(isQuote).length;
+  document.querySelector("#tabPaidCount").textContent = state.orders.filter(isPaidOpen).length;
+  document.querySelector("#tabFulfilledCount").textContent = state.orders.filter((order) => order.status === "fulfilled").length;
+  for (const tab of elements.orderTabs) {
+    const active = tab.dataset.orderView === state.view;
+    tab.classList.toggle("active", active);
+    tab.setAttribute("aria-selected", String(active));
+  }
+}
+
+function renderOrders() {
+  const orders = visibleOrders();
+  elements.ordersBody.replaceChildren();
+  elements.resultCount.textContent = `${orders.length} result${orders.length === 1 ? "" : "s"}`;
+  elements.tableMessage.hidden = orders.length > 0;
+  elements.tableMessage.textContent = "No orders match these filters.";
+  elements.orderPanelTitle.textContent = viewTitles[state.view];
+  renderTabCounts();
+
+  let previousGroup = "";
+  for (const order of orders) {
+    const group = orderGroup(order);
+    if (state.view === "all" && group !== previousGroup) {
+      const headingRow = document.createElement("tr");
+      headingRow.className = `order-group order-group-${group}`;
+      const headingCell = makeElement("td", "", groupLabels[group]);
+      headingCell.colSpan = 7;
+      headingRow.append(headingCell);
+      elements.ordersBody.append(headingRow);
+      previousGroup = group;
+    }
+
     const row = document.createElement("tr");
+    row.className = isQuote(order) ? "quote-row" : isPaidOpen(order) ? "paid-open-row" : order.status === "fulfilled" ? "fulfilled-row" : "other-row";
     row.tabIndex = 0;
     row.setAttribute("aria-label", `Open ${order.id}`);
 
     const orderCell = makeElement("td", "");
     const orderCopy = makeElement("div", "order-cell");
-    orderCopy.append(makeElement("strong", "", order.id), makeElement("span", "", formatDate(order.created_at)));
+    const orderKind = makeElement("span", `order-kind ${isQuote(order) ? "request-kind" : "sale-kind"}`, isQuote(order) ? "REQUEST" : "ORDER");
+    orderCopy.append(orderKind, makeElement("strong", "", order.id), makeElement("span", "", formatDate(order.created_at)));
     orderCell.append(orderCopy);
 
     const customerCell = makeElement("td", "");
@@ -116,7 +192,7 @@ function renderOrders() {
     customerCell.append(customerCopy);
 
     const fulfillment = makeElement("td", "", order.fulfillment === "delivery" ? "Delivery" : "Pickup");
-    const total = makeElement("td", "amount", order.order_type === "quote" ? "Quote" : money(order.total_cents, order.currency));
+    const total = makeElement("td", "amount", isQuote(order) ? "Needs quote" : money(order.total_cents, order.currency));
     const payment = makeElement("td", "");
     payment.append(makePill(order.payment_status));
     const status = makeElement("td", "");
@@ -200,7 +276,7 @@ async function loadOrders() {
   elements.tableMessage.hidden = false;
   elements.tableMessage.textContent = "Loading orders…";
   const query = new URLSearchParams({
-    status: elements.statusFilter.value,
+    status: "all",
     search: elements.orderSearch.value.trim()
   });
   try {
@@ -238,7 +314,14 @@ document.querySelector("#refreshButton").addEventListener("click", () => {
   loadOrders();
   showToast("Orders refreshed");
 });
-elements.statusFilter.addEventListener("change", loadOrders);
+elements.statusFilter.addEventListener("change", renderOrders);
+for (const tab of elements.orderTabs) {
+  tab.addEventListener("click", () => {
+    state.view = tab.dataset.orderView;
+    elements.statusFilter.value = "all";
+    renderOrders();
+  });
+}
 elements.orderSearch.addEventListener("input", () => {
   clearTimeout(elements.orderSearch.timer);
   elements.orderSearch.timer = setTimeout(loadOrders, 280);

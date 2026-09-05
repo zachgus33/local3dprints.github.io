@@ -64,11 +64,18 @@
 
         <section class="orders-panel">
           <div class="panel-heading">
-            <div><h2>All orders</h2><span id="resultCount">Loading…</span></div>
+            <div><h2 id="orderPanelTitle">All orders</h2><span id="resultCount">Loading…</span></div>
             <div class="filters">
               <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input id="orderSearch" type="search" placeholder="Search order or customer"></label>
               <label class="status-filter"><span class="sr-only">Filter order status</span><select id="statusFilter"><option value="all">All statuses</option><option value="new">New</option><option value="quote_requested">Quote requested</option><option value="in_production">In production</option><option value="ready">Ready</option><option value="fulfilled">Fulfilled</option><option value="awaiting_payment">Awaiting payment</option><option value="canceled">Canceled</option></select></label>
             </div>
+          </div>
+
+          <div class="order-tabs" role="tablist" aria-label="Order type">
+            <button class="order-tab active" type="button" role="tab" aria-selected="true" data-order-view="all">All <span id="tabAllCount">0</span></button>
+            <button class="order-tab quote-tab" type="button" role="tab" aria-selected="false" data-order-view="quotes">Quote requests <span id="tabQuoteCount">0</span></button>
+            <button class="order-tab paid-tab" type="button" role="tab" aria-selected="false" data-order-view="paid_open">Paid &amp; open <span id="tabPaidCount">0</span></button>
+            <button class="order-tab" type="button" role="tab" aria-selected="false" data-order-view="fulfilled">Fulfilled <span id="tabFulfilledCount">0</span></button>
           </div>
 
           <div class="table-wrap">
