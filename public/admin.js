@@ -229,6 +229,7 @@ function openOrder(order) {
   document.querySelector("#detailTotal").textContent = order.order_type === "quote" ? "To be quoted" : money(order.total_cents, order.currency);
   elements.statusForm.elements.orderId.value = order.id;
   elements.statusForm.elements.status.value = order.status;
+  document.querySelector("#deleteOrderSection").hidden = order.payment_status === "paid";
   elements.dialogError.textContent = "";
   elements.orderDialog.showModal();
 }
@@ -307,6 +308,32 @@ elements.statusForm.addEventListener("submit", async (event) => {
     elements.dialogError.textContent = error.message;
   } finally {
     button.disabled = false;
+  }
+});
+
+document.querySelector("#deleteOrderButton").addEventListener("click", async () => {
+  const order = state.selectedOrder;
+  if (!order || order.payment_status === "paid") return;
+  const confirmed = window.confirm(`Permanently delete ${order.id}?\n\nThis removes the order and any uploaded files. This cannot be undone.`);
+  if (!confirmed) return;
+
+  const button = document.querySelector("#deleteOrderButton");
+  elements.dialogError.textContent = "";
+  button.disabled = true;
+  button.textContent = "Deleting…";
+  try {
+    const result = await api(`/api/admin/orders/${encodeURIComponent(order.id)}`, { method: "DELETE" });
+    state.orders = state.orders.filter((entry) => entry.id !== order.id);
+    state.selectedOrder = null;
+    renderStats(result.stats);
+    renderOrders();
+    elements.orderDialog.close();
+    showToast("Order permanently deleted");
+  } catch (error) {
+    elements.dialogError.textContent = error.message;
+  } finally {
+    button.disabled = false;
+    button.textContent = "Delete order";
   }
 });
 

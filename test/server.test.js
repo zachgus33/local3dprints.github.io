@@ -128,6 +128,18 @@ test("storefront, quote workflow, and authenticated admin workflow", async () =>
   assert.equal(csv.status, 200);
   assert.match(csv.headers.get("content-type"), /text\/csv/);
 
+  const deleted = await json(`/api/admin/orders/${quote.body.orderId}`, {
+    method: "DELETE",
+    headers: { Cookie: cookie }
+  });
+  assert.equal(deleted.response.status, 200);
+  assert.equal(deleted.body.deleted, true);
+  assert.equal(deleted.body.stats.total, 0);
+
+  const ordersAfterDelete = await json("/api/admin/orders", { headers: { Cookie: cookie } });
+  assert.equal(ordersAfterDelete.body.orders.length, 0);
+  assert.equal((await fetch(`${baseUrl}/api/admin/attachments/${orders.body.orders[0].attachments[0].id}`, { headers: { Cookie: cookie } })).status, 404);
+
   const checkout = await json("/api/checkout", {
     method: "POST",
     body: JSON.stringify({

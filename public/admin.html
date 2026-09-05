@@ -7,8 +7,8 @@
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>Order Dashboard — Local Layer Prints</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/admin.css?v=5">
-  <script src="/admin.js?v=5" defer></script>
+  <link rel="stylesheet" href="/admin.css?v=6">
+  <script src="/admin.js?v=6" defer></script>
 </head>
 <body>
   <main class="login-screen" id="loginScreen">
@@ -107,6 +107,10 @@
         <label><span>Update status</span><select name="status"><option value="awaiting_payment">Awaiting payment</option><option value="new">New</option><option value="quote_requested">Quote requested</option><option value="in_production">In production</option><option value="ready">Ready</option><option value="fulfilled">Fulfilled</option><option value="canceled">Canceled</option></select></label>
         <button class="primary-button" type="submit" id="saveStatusButton">Save status</button>
       </form>
+      <section class="delete-order-section" id="deleteOrderSection">
+        <div><strong>Delete unpaid order</strong><span>Permanently removes this order and any uploaded files.</span></div>
+        <button class="danger-button" type="button" id="deleteOrderButton">Delete order</button>
+      </section>
       <p class="dialog-error" id="dialogError" role="alert"></p>
     </div>
   </dialog>

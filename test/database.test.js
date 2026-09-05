@@ -58,4 +58,6 @@ test("paid Stripe sessions update an order exactly once", () => {
   assert.equal(first.customer_phone, "555-0102");
   assert.equal(second.paid_at, first.paid_at);
   assert.equal(database.orderStats().paidRevenueCents, 1000);
+  assert.equal(database.deleteOrder("LLP-TEST-PAID"), false);
+  assert.equal(database.getOrder("LLP-TEST-PAID").payment_status, "paid");
 });

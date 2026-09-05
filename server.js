@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { randomBytes } from "node:crypto";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, extname, join, resolve } from "node:path";
+import { dirname, extname, join, resolve, sep } from "node:path";
 import express from "express";
 import Stripe from "stripe";
 import { SHOP, describeOptions, describeStoredOptions, publicCatalog, validateCart } from "./lib/catalog.js";
@@ -11,6 +11,7 @@ import {
   analyticsStats,
   attachStripeSession,
   createOrder,
+  deleteOrder,
   getQuoteAttachment,
   getOrder,
   getPublicOrder,
@@ -415,6 +416,43 @@ app.patch("/api/admin/orders/:orderId", requireAdmin, (req, res) => {
   const order = updateOrderStatus(req.params.orderId, req.body.status);
   if (!order) return res.status(404).json({ error: "Order not found." });
   res.json({ order, stats: orderStats() });
+});
+
+app.delete("/api/admin/orders/:orderId", requireAdmin, async (req, res) => {
+  const orderId = text(req.params.orderId, 80);
+  let order = getOrder(orderId);
+  if (!order) return res.status(404).json({ error: "Order not found." });
+  if (order.payment_status === "paid") {
+    return res.status(409).json({ error: "Paid orders cannot be deleted. Keep them for payment and business records." });
+  }
+
+  if (stripe && order.stripe_session_id) {
+    try {
+      const session = await stripe.checkout.sessions.retrieve(order.stripe_session_id);
+      updateFromStripeSession(session);
+      order = getOrder(orderId);
+      if (order?.payment_status === "paid") {
+        return res.status(409).json({ error: "Stripe shows this order as paid, so it cannot be deleted." });
+      }
+      if (session.status === "open") await stripe.checkout.sessions.expire(session.id);
+    } catch (error) {
+      console.error("Unable to safely close Stripe checkout before deleting order", error.message);
+      return res.status(502).json({ error: "Could not safely close the Stripe checkout. Try again in a moment." });
+    }
+  }
+
+  if (!deleteOrder(orderId)) return res.status(409).json({ error: "This order could not be deleted." });
+
+  const orderDirectory = resolve(UPLOAD_ROOT, orderId);
+  if (orderDirectory.startsWith(`${UPLOAD_ROOT}${sep}`)) {
+    try {
+      rmSync(orderDirectory, { recursive: true, force: true });
+    } catch (error) {
+      console.error("Unable to remove deleted order uploads", error.message);
+    }
+  }
+
+  res.json({ deleted: true, orderId, stats: orderStats() });
 });
 
 function csvCell(value) {
