@@ -311,7 +311,13 @@ app.get("/api/admin/orders.csv", requireAdmin, (req, res) => {
   res.send(`\uFEFF${lines.join("\n")}`);
 });
 
-app.use(express.static(join(ROOT, "public"), { extensions: ["html"], maxAge: process.env.NODE_ENV === "production" ? "1h" : 0 }));
+app.use(express.static(join(ROOT, "public"), {
+  extensions: ["html"],
+  maxAge: process.env.NODE_ENV === "production" ? "1h" : 0,
+  setHeaders(res, filePath) {
+    if (/admin\.(?:html|css|js)$/.test(filePath)) res.setHeader("Cache-Control", "no-store");
+  }
+}));
 app.get("/admin", (req, res) => res.sendFile(join(ROOT, "public", "admin.html")));
 app.use((req, res) => res.status(404).sendFile(join(ROOT, "public", "404.html")));
 
