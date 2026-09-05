@@ -47,9 +47,14 @@ test("storefront, quote workflow, and authenticated admin workflow", async () =>
   assert.equal(productPage.status, 200);
   assert.match(await productPage.text(), /Pac-Man Clock \| Jacksonville 3D Printing/);
 
+  const servicePage = await fetch(`${baseUrl}/custom-3d-printing-jacksonville`);
+  assert.equal(servicePage.status, 200);
+  assert.match(await servicePage.text(), /Custom 3D Printing in Jacksonville, FL/);
+
   const sitemap = await fetch(`${baseUrl}/sitemap.xml`);
   assert.equal(sitemap.status, 200);
   assert.match(await sitemap.text(), /products\/tabletop-water-fountain/);
+  assert.match(await (await fetch(`${baseUrl}/sitemap.xml`)).text(), /services\/print-your-stl/);
 
   const analyticsEvent = await json("/api/analytics/event", {
     method: "POST",

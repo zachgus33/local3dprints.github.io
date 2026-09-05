@@ -210,7 +210,14 @@ app.get("/products/:productId", (req, res) => {
 });
 
 app.get("/sitemap.xml", (req, res) => {
-  const urls = ["", "/policies", ...publicCatalog().products.map((product) => `/products/${encodeURIComponent(product.id)}`)];
+  const urls = [
+    "",
+    "/custom-3d-printing-jacksonville",
+    "/services/print-your-stl",
+    "/services/replacement-parts",
+    "/policies",
+    ...publicCatalog().products.map((product) => `/products/${encodeURIComponent(product.id)}`)
+  ];
   const body = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map((path) => `<url><loc>${SITE_URL}${path}</loc></url>`).join("")}</urlset>`;
   res.type("application/xml").send(body);
 });

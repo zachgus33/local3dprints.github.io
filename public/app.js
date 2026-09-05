@@ -500,8 +500,12 @@ async function initialize() {
     renderProducts();
     renderCart();
     await handleCheckoutReturn();
-    if (new URLSearchParams(window.location.search).get("cart") === "open") {
+    const landingParams = new URLSearchParams(window.location.search);
+    if (landingParams.get("cart") === "open") {
       openCart();
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (landingParams.get("quote") === "open") {
+      openModal(elements.quoteModal);
       window.history.replaceState({}, "", window.location.pathname);
     }
   } catch (error) {
