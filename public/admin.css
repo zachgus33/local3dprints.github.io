@@ -58,7 +58,7 @@ button,a { -webkit-tap-highlight-color:transparent; }
 .analytics-heading { display:flex; justify-content:space-between; gap:20px; align-items:end; margin-bottom:18px; }
 .analytics-heading h2 { margin:0; font-family:var(--display); font-size:24px; font-weight:500; }
 .analytics-heading > p { margin:0; color:var(--muted); font-size:9px; }
-.analytics-grid { display:grid; grid-template-columns:repeat(7,1fr); border:1px solid var(--line); }
+.analytics-grid { display:grid; grid-template-columns:repeat(8,1fr); border:1px solid var(--line); }
 .analytics-grid article { display:grid; gap:7px; padding:15px; border-right:1px solid var(--line); }
 .analytics-grid article:last-child { border-right:0; }
 .analytics-grid span { color:var(--muted); font-size:8px; font-weight:800; text-transform:uppercase; }

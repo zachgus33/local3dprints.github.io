@@ -541,6 +541,7 @@ const uploadInput = elements.quoteForm.elements.uploads;
 const selectedFiles = document.querySelector("#selectedFiles");
 uploadInput.addEventListener("change", () => {
   const files = [...uploadInput.files];
+  if (files.length) track("file_upload");
   selectedFiles.replaceChildren(...files.map((file) => makeElement("span", "", `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB`)));
 });
 

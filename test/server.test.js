@@ -38,6 +38,7 @@ test("storefront, quote workflow, and authenticated admin workflow", async () =>
   const home = await fetch(`${baseUrl}/`);
   assert.equal(home.status, 200);
   assert.match(home.headers.get("content-security-policy"), /default-src 'self'/);
+  assert.match(await home.text(), /Local Layer Prints \| Useful 3D Prints in Jacksonville/);
 
   const catalog = await json("/api/catalog");
   assert.equal(catalog.response.status, 200);
@@ -49,7 +50,7 @@ test("storefront, quote workflow, and authenticated admin workflow", async () =>
 
   const servicePage = await fetch(`${baseUrl}/custom-3d-printing-jacksonville`);
   assert.equal(servicePage.status, 200);
-  assert.match(await servicePage.text(), /Custom 3D Printing in Jacksonville, FL/);
+  assert.match(await servicePage.text(), /Custom 3D Printing Service in Jacksonville, FL/);
 
   const sitemap = await fetch(`${baseUrl}/sitemap.xml`);
   assert.equal(sitemap.status, 200);
@@ -61,6 +62,12 @@ test("storefront, quote workflow, and authenticated admin workflow", async () =>
     body: JSON.stringify({ eventName: "page_view", source: "integration-test", path: "/" })
   });
   assert.equal(analyticsEvent.response.status, 204);
+
+  const uploadAnalyticsEvent = await json("/api/analytics/event", {
+    method: "POST",
+    body: JSON.stringify({ eventName: "file_upload", source: "integration-test", path: "/" })
+  });
+  assert.equal(uploadAnalyticsEvent.response.status, 204);
 
   const quote = await json("/api/quotes", {
     method: "POST",
@@ -103,6 +110,7 @@ test("storefront, quote workflow, and authenticated admin workflow", async () =>
   assert.equal(orders.body.orders[0].attachments.length, 1);
   assert.match(orders.body.orders[0].items[0].details, /Budget: Around \$20/);
   assert.equal(orders.body.analytics.pageViews, 1);
+  assert.equal(orders.body.analytics.fileUploads, 1);
 
   const attachment = await fetch(`${baseUrl}/api/admin/attachments/${orders.body.orders[0].attachments[0].id}`, { headers: { Cookie: cookie } });
   assert.equal(attachment.status, 200);

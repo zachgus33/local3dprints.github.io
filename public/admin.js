@@ -98,6 +98,7 @@ function renderAnalytics(analytics = {}) {
   document.querySelector("#metricPageViews").textContent = analytics.pageViews || 0;
   document.querySelector("#metricProductViews").textContent = analytics.productViews || 0;
   document.querySelector("#metricQuoteClicks").textContent = analytics.customRequestClicks || 0;
+  document.querySelector("#metricFileUploads").textContent = analytics.fileUploads || 0;
   document.querySelector("#metricAddToCart").textContent = analytics.addToCart || 0;
   document.querySelector("#metricCheckout").textContent = analytics.checkoutStarted || 0;
   document.querySelector("#metricPurchases").textContent = analytics.purchaseCompleted || 0;

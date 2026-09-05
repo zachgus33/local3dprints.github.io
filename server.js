@@ -190,7 +190,7 @@ app.get("/api/health", (req, res) => {
 app.get("/api/catalog", (req, res) => res.json(publicCatalog()));
 
 app.post("/api/analytics/event", analyticsRateLimit, (req, res) => {
-  const allowed = new Set(["page_view", "product_view", "custom_request_click", "add_to_cart", "checkout_started", "purchase_completed", "custom_request_submitted"]);
+  const allowed = new Set(["page_view", "product_view", "custom_request_click", "file_upload", "add_to_cart", "checkout_started", "purchase_completed", "custom_request_submitted"]);
   const eventName = text(req.body?.eventName, 40);
   if (!allowed.has(eventName)) return res.status(400).json({ error: "Unknown analytics event." });
   recordAnalyticsEvent({
