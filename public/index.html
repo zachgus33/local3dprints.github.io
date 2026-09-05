@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Useful, thoughtfully designed 3D prints made locally by Local Layer Prints.">
+  <meta name="theme-color" content="#f5f1e8">
+  <title>Local Layer Prints — Useful things, made locally</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="announcement">
+    <p><span class="announcement-dot"></span> Made to order in small batches</p>
+    <p class="announcement-detail">Local pickup &amp; delivery available</p>
+  </div>
+
+  <header class="site-header" id="top">
+    <a class="brand" href="#top" aria-label="Local Layer Prints home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 42 42" role="img">
+          <path d="M7 12.4 21 5l14 7.4L21 20 7 12.4Z"></path>
+          <path d="m7 20.8 14 7.5 14-7.5"></path>
+          <path d="m7 29.1 14 7.5 14-7.5"></path>
+        </svg>
+      </span>
+      <span class="brand-copy"><strong>LOCAL LAYER</strong><small>PRINTS</small></span>
+    </a>
+
+    <nav class="desktop-nav" aria-label="Main navigation">
+      <a href="#shop">Shop</a>
+      <a href="#process">How it works</a>
+      <a href="#custom">Custom prints</a>
+    </nav>
+
+    <button class="cart-trigger" id="openCartButton" type="button" aria-controls="cartDrawer" aria-expanded="false">
+      <span>Cart</span>
+      <span class="cart-count" id="cartCount" aria-label="0 items">0</span>
+    </button>
+  </header>
+
+  <main>
+    <section class="hero shell" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Thoughtful objects. Made layer by layer.</p>
+        <h1 id="hero-title">Useful things,<br><em>made locally.</em></h1>
+        <p class="hero-lede">Practical 3D prints designed for everyday life, made to order in the color and size that fits your space.</p>
+        <div class="hero-actions">
+          <a class="button button-dark" href="#shop">Explore the collection <span aria-hidden="true">↘</span></a>
+          <button class="text-link" type="button" data-open-quote>Request a custom print <span aria-hidden="true">→</span></button>
+        </div>
+        <div class="hero-proof" aria-label="Shop benefits">
+          <span><b>01</b> Pick your print</span>
+          <span><b>02</b> Choose your finish</span>
+          <span><b>03</b> We make it locally</span>
+        </div>
+      </div>
+
+      <div class="hero-art" aria-label="Featured 3D prints">
+        <div class="hero-orbit hero-orbit-one"></div>
+        <div class="hero-orbit hero-orbit-two"></div>
+        <div class="hero-card hero-card-main">
+          <span class="hero-label">FEATURED / 01</span>
+          <img src="/assets/stackable-glasses.png" alt="Stackable glasses stand" fetchpriority="high">
+          <div><strong>Stackable Glasses Stand</strong><span>From $12</span></div>
+        </div>
+        <div class="hero-card hero-card-small">
+          <img src="/assets/cascade-wallet.png" alt="Cascade wallet">
+          <span>Made for the everyday</span>
+        </div>
+        <span class="hero-badge">MADE<br>LOCAL</span>
+      </div>
+    </section>
+
+    <section class="benefit-strip" aria-label="Store benefits">
+      <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M6 4h12l2 4v12H4V8l2-4Zm3 8h6"></path></svg><span><strong>Made to order</strong><small>Less waste, more choice</small></span></div>
+      <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.1 7-12A7 7 0 1 0 5 9c0 5.9 7 12 7 12Z"></path><circle cx="12" cy="9" r="2"></circle></svg><span><strong>Made locally</strong><small>Pickup or local delivery</small></span></div>
+      <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5c0 4.7 3.2 8.2 7.5 10 4.3-1.8 7.5-5.3 7.5-10V6L12 3Z"></path><path d="m9 12 2 2 4-4"></path></svg><span><strong>Secure checkout</strong><small>Payments processed by Stripe</small></span></div>
+    </section>
+
+    <section class="shop-section shell" id="shop" aria-labelledby="shop-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">The collection</p>
+          <h2 id="shop-title">Designed to be useful.<br>Printed to be yours.</h2>
+        </div>
+        <p>Small upgrades for the spaces and routines you use every day. Choose a color, pick your size, and we’ll take it from there.</p>
+      </div>
+
+      <div class="catalog-tools">
+        <div class="category-list" id="categoryList" aria-label="Filter by category"></div>
+        <label class="search-field">
+          <span class="sr-only">Search products</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+          <input type="search" id="searchInput" placeholder="Search the collection">
+        </label>
+      </div>
+
+      <div class="product-grid" id="productGrid" aria-live="polite">
+        <div class="loading-card"></div><div class="loading-card"></div><div class="loading-card"></div>
+      </div>
+    </section>
+
+    <section class="process-section" id="process" aria-labelledby="process-title">
+      <div class="shell">
+        <div class="section-heading process-heading">
+          <div>
+            <p class="eyebrow">From idea to object</p>
+            <h2 id="process-title">How your print<br>comes to life.</h2>
+          </div>
+          <p>Every piece is produced in a small batch after you order, then carefully checked before pickup or delivery.</p>
+        </div>
+        <ol class="process-grid">
+          <li><span>01</span><div class="process-icon">⌁</div><h3>Choose it</h3><p>Pick a design, color, and size that works for you.</p></li>
+          <li><span>02</span><div class="process-icon">◫</div><h3>We print it</h3><p>Your order is printed locally, one careful layer at a time.</p></li>
+          <li><span>03</span><div class="process-icon">✓</div><h3>We check it</h3><p>Each piece is inspected and cleaned up by hand.</p></li>
+          <li><span>04</span><div class="process-icon">⌂</div><h3>You get it</h3><p>Choose free local pickup or convenient delivery.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="custom-section shell" id="custom" aria-labelledby="custom-title">
+      <div class="custom-visual" aria-hidden="true">
+        <span class="custom-ring ring-one"></span>
+        <span class="custom-ring ring-two"></span>
+        <span class="custom-cube cube-one"></span>
+        <span class="custom-cube cube-two"></span>
+        <span class="custom-word">YOUR<br>IDEA</span>
+      </div>
+      <div class="custom-copy">
+        <p class="eyebrow">Need something different?</p>
+        <h2 id="custom-title">Let’s make the thing<br>you can’t find.</h2>
+        <p>Have a specific problem, replacement part, or gift in mind? Tell us what you need and we’ll get back to you with options and a quote.</p>
+        <button class="button button-light" type="button" data-open-quote>Start a custom request <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+
+    <section class="faq-section shell" aria-labelledby="faq-title">
+      <div class="faq-intro">
+        <p class="eyebrow">Good to know</p>
+        <h2 id="faq-title">A few common<br>questions.</h2>
+      </div>
+      <div class="faq-list">
+        <details><summary>How long will my order take?<span>+</span></summary><p>Most orders are ready within a few days. Timing depends on print size and current order volume; we’ll contact you when your order is ready.</p></details>
+        <details><summary>How does pickup or delivery work?<span>+</span></summary><p>Pickup is free. Local delivery is available for a $3 fee. We’ll coordinate the exact time and location after your order is placed.</p></details>
+        <details><summary>Can I request a color that is not listed?<span>+</span></summary><p>Absolutely. Send a custom request and tell us the color you have in mind. We’ll confirm material availability before quoting.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-grid">
+      <a class="brand brand-footer" href="#top">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 42 42"><path d="M7 12.4 21 5l14 7.4L21 20 7 12.4Z"></path><path d="m7 20.8 14 7.5 14-7.5"></path><path d="m7 29.1 14 7.5 14-7.5"></path></svg></span>
+        <span class="brand-copy"><strong>LOCAL LAYER</strong><small>PRINTS</small></span>
+      </a>
+      <div><p>Useful objects, made locally<br>one layer at a time.</p><a id="footerEmail" href="mailto:thelocallayerprints3d@gmail.com">thelocallayerprints3d@gmail.com</a></div>
+      <nav aria-label="Footer navigation"><a href="#shop">Shop</a><a href="#process">How it works</a><button type="button" data-open-quote>Custom requests</button><a href="/admin">Order dashboard</a></nav>
+    </div>
+    <div class="shell footer-bottom"><span>© <span id="currentYear"></span> Local Layer Prints</span><span>Built local. Made useful.</span></div>
+  </footer>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="cart-drawer" id="cartDrawer" aria-labelledby="cartTitle" aria-hidden="true">
+    <div class="drawer-header">
+      <div><p class="eyebrow">Your selection</p><h2 id="cartTitle">Your cart</h2></div>
+      <button class="icon-button" id="closeCartButton" type="button" aria-label="Close cart">×</button>
+    </div>
+    <div class="cart-body" id="cartBody"></div>
+    <div class="cart-footer" id="cartFooter">
+      <div class="cart-total"><span>Subtotal</span><strong id="cartSubtotal">$0.00</strong></div>
+      <p>Pickup is free. Local delivery is calculated at checkout.</p>
+      <button class="button button-dark button-full" id="beginCheckoutButton" type="button">Continue to checkout <span aria-hidden="true">→</span></button>
+      <div class="stripe-note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg> Secure payment powered by Stripe</div>
+    </div>
+  </aside>
+
+  <dialog class="modal" id="checkoutModal">
+    <form class="modal-card" id="checkoutForm">
+      <div class="modal-heading">
+        <div><p class="eyebrow">Almost there</p><h2>Checkout details</h2></div>
+        <button class="icon-button" type="button" data-close-modal aria-label="Close checkout">×</button>
+      </div>
+      <p class="modal-intro">Enter your details, then continue to Stripe to pay securely.</p>
+      <div class="form-grid">
+        <label class="field field-full"><span>Full name *</span><input name="customerName" autocomplete="name" required maxlength="100" placeholder="Your name"></label>
+        <label class="field"><span>Email *</span><input name="customerEmail" type="email" autocomplete="email" required maxlength="160" placeholder="you@example.com"></label>
+        <label class="field"><span>Phone</span><input name="customerPhone" type="tel" autocomplete="tel" maxlength="40" placeholder="(555) 555-5555"></label>
+      </div>
+      <fieldset class="fulfillment-fieldset">
+        <legend>How would you like your order?</legend>
+        <div class="fulfillment-options">
+          <label><input type="radio" name="fulfillment" value="pickup" checked><span><b>Local pickup</b><small>Free · We’ll coordinate a time</small></span><strong>$0</strong></label>
+          <label><input type="radio" name="fulfillment" value="delivery"><span><b>Local delivery</b><small>Delivered in the local area</small></span><strong id="deliveryFeeText">$3</strong></label>
+        </div>
+      </fieldset>
+      <label class="field field-full hidden" id="addressField"><span>Delivery address *</span><input name="address" autocomplete="street-address" maxlength="300" placeholder="Street, city, state, ZIP"></label>
+      <label class="field field-full"><span>Order note <small>(optional)</small></span><textarea name="customerNotes" maxlength="500" placeholder="Anything we should know about your order?"></textarea></label>
+      <div class="checkout-summary"><span>Total due today</span><strong id="checkoutTotal">$0.00</strong></div>
+      <p class="form-error" id="checkoutError" role="alert"></p>
+      <button class="button button-dark button-full" id="payButton" type="submit">Continue to secure payment <span aria-hidden="true">→</span></button>
+      <p class="fine-print">By continuing, you agree that made-to-order production begins after payment.</p>
+    </form>
+  </dialog>
+
+  <dialog class="modal" id="quoteModal">
+    <form class="modal-card" id="quoteForm">
+      <div class="modal-heading">
+        <div><p class="eyebrow">Custom print</p><h2>Tell us what you need</h2></div>
+        <button class="icon-button" type="button" data-close-modal aria-label="Close request form">×</button>
+      </div>
+      <p class="modal-intro">Share the idea, approximate size, and how you plan to use it. We’ll follow up by email with questions or a quote.</p>
+      <div class="form-grid">
+        <label class="field"><span>Full name *</span><input name="customerName" autocomplete="name" required maxlength="100"></label>
+        <label class="field"><span>Email *</span><input name="customerEmail" type="email" autocomplete="email" required maxlength="160"></label>
+        <label class="field field-full"><span>Phone</span><input name="customerPhone" type="tel" autocomplete="tel" maxlength="40"></label>
+        <label class="field field-full"><span>What would you like made? *</span><textarea name="details" required minlength="12" maxlength="1200" placeholder="Describe the object, dimensions, purpose, preferred color, or include a link..."></textarea></label>
+      </div>
+      <fieldset class="fulfillment-fieldset compact">
+        <legend>Preferred fulfillment</legend>
+        <div class="fulfillment-options">
+          <label><input type="radio" name="fulfillment" value="pickup" checked><span><b>Pickup</b></span></label>
+          <label><input type="radio" name="fulfillment" value="delivery"><span><b>Delivery</b></span></label>
+        </div>
+      </fieldset>
+      <label class="field field-full hidden quote-address"><span>Delivery area / address *</span><input name="address" maxlength="300"></label>
+      <input type="hidden" name="customerNotes" value="">
+      <p class="form-error" id="quoteError" role="alert"></p>
+      <button class="button button-dark button-full" id="quoteButton" type="submit">Send custom request <span aria-hidden="true">→</span></button>
+      <p class="fine-print">No payment is collected for a quote request.</p>
+    </form>
+  </dialog>
+
+  <div class="status-banner" id="statusBanner" role="status" aria-live="polite" hidden>
+    <div class="status-icon" id="statusIcon">✓</div>
+    <div><strong id="statusTitle"></strong><p id="statusMessage"></p></div>
+    <button type="button" id="closeStatus" aria-label="Dismiss">×</button>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

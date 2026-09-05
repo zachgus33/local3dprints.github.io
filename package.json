@@ -1,0 +1,22 @@
+{
+  "name": "local-layer-prints-store",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local Layer Prints storefront, Stripe checkout, and order dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "check": "node --check server.js && node --check lib/catalog.js && node --check lib/database.js && node --check lib/auth.js && node --check public/app.js && node --check public/admin.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "stripe": "^18.0.0"
+  }
+}

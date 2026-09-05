@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17271f">
+  <title>Order Dashboard — Local Layer Prints</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/admin.css">
+  <script src="/admin.js" defer></script>
+</head>
+<body>
+  <main class="login-screen" id="loginScreen">
+    <section class="login-card">
+      <a class="admin-brand" href="/" aria-label="Back to storefront">
+        <span class="admin-mark"><svg viewBox="0 0 42 42" aria-hidden="true"><path d="M7 12.4 21 5l14 7.4L21 20 7 12.4Z"></path><path d="m7 20.8 14 7.5 14-7.5"></path><path d="m7 29.1 14 7.5 14-7.5"></path></svg></span>
+        <span><strong>LOCAL LAYER</strong><small>ORDER DESK</small></span>
+      </a>
+      <p class="overline">Private access</p>
+      <h1>Welcome back.</h1>
+      <p class="login-intro">Sign in to review orders, confirm production, and track fulfillment.</p>
+      <form id="loginForm">
+        <label><span>Admin password</span><input name="password" type="password" autocomplete="current-password" required autofocus></label>
+        <p class="form-error" id="loginError" role="alert"></p>
+        <button type="submit" id="loginButton">Open dashboard <span>→</span></button>
+      </form>
+      <a class="back-link" href="/">← Back to storefront</a>
+    </section>
+  </main>
+
+  <div class="dashboard" id="dashboard" hidden>
+    <aside class="sidebar">
+      <a class="admin-brand admin-brand-light" href="/">
+        <span class="admin-mark"><svg viewBox="0 0 42 42" aria-hidden="true"><path d="M7 12.4 21 5l14 7.4L21 20 7 12.4Z"></path><path d="m7 20.8 14 7.5 14-7.5"></path><path d="m7 29.1 14 7.5 14-7.5"></path></svg></span>
+        <span><strong>LOCAL LAYER</strong><small>ORDER DESK</small></span>
+      </a>
+      <nav aria-label="Dashboard navigation">
+        <button class="nav-item active" type="button"><span>▦</span> Orders</button>
+        <a class="nav-item" href="/" target="_blank"><span>↗</span> View storefront</a>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="live-dot"></span><span>Order system online</span>
+        <button id="logoutButton" type="button">Sign out</button>
+      </div>
+    </aside>
+
+    <div class="dashboard-main">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton" type="button" aria-label="Open navigation">☰</button>
+        <div><p class="overline">Operations</p><h1>Orders</h1></div>
+        <div class="topbar-actions">
+          <a class="secondary-button" href="/api/admin/orders.csv">Export CSV</a>
+          <button class="primary-button" id="refreshButton" type="button">Refresh <span>↻</span></button>
+        </div>
+      </header>
+
+      <div class="dashboard-content">
+        <section class="stats" aria-label="Order summary">
+          <article><span>New orders</span><strong id="statNew">—</strong><small>Ready to review</small></article>
+          <article><span>In production</span><strong id="statProduction">—</strong><small>Currently printing</small></article>
+          <article><span>Ready</span><strong id="statReady">—</strong><small>Awaiting fulfillment</small></article>
+          <article class="revenue-card"><span>Paid revenue</span><strong id="statRevenue">—</strong><small>All recorded payments</small></article>
+        </section>
+
+        <section class="orders-panel">
+          <div class="panel-heading">
+            <div><h2>All orders</h2><span id="resultCount">Loading…</span></div>
+            <div class="filters">
+              <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input id="orderSearch" type="search" placeholder="Search order or customer"></label>
+              <label class="status-filter"><span class="sr-only">Filter order status</span><select id="statusFilter"><option value="all">All statuses</option><option value="new">New</option><option value="quote_requested">Quote requested</option><option value="in_production">In production</option><option value="ready">Ready</option><option value="fulfilled">Fulfilled</option><option value="awaiting_payment">Awaiting payment</option><option value="canceled">Canceled</option></select></label>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Order</th><th>Customer</th><th>Fulfillment</th><th>Total</th><th>Payment</th><th>Status</th><th></th></tr></thead>
+              <tbody id="ordersBody"></tbody>
+            </table>
+            <div class="table-message" id="tableMessage">Loading orders…</div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <dialog class="order-dialog" id="orderDialog">
+    <div class="dialog-card">
+      <div class="dialog-heading">
+        <div><p class="overline">Order details</p><h2 id="detailOrderId"></h2></div>
+        <button class="close-button" type="button" id="closeDialog" aria-label="Close">×</button>
+      </div>
+      <div class="detail-meta" id="detailMeta"></div>
+      <section class="detail-section"><h3>Items</h3><div id="detailItems"></div></section>
+      <section class="detail-section"><h3>Customer</h3><div class="customer-grid" id="detailCustomer"></div></section>
+      <section class="detail-section" id="detailNotesSection"><h3>Notes</h3><p id="detailNotes"></p></section>
+      <div class="detail-total"><span>Order total</span><strong id="detailTotal"></strong></div>
+      <form class="status-form" id="statusForm">
+        <input type="hidden" name="orderId">
+        <label><span>Update status</span><select name="status"><option value="awaiting_payment">Awaiting payment</option><option value="new">New</option><option value="quote_requested">Quote requested</option><option value="in_production">In production</option><option value="ready">Ready</option><option value="fulfilled">Fulfilled</option><option value="canceled">Canceled</option></select></label>
+        <button class="primary-button" type="submit" id="saveStatusButton">Save status</button>
+      </form>
+      <p class="dialog-error" id="dialogError" role="alert"></p>
+    </div>
+  </dialog>
+  <div class="admin-toast" id="adminToast" role="status"></div>
+</body>
+</html>

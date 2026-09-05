@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: local-layer-prints
+    runtime: node
+    region: ohio
+    plan: 0.5c-512mb
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_VERSION
+        value: 24.20.0
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_PATH
+        value: /var/data/orders.sqlite
+      - key: APP_URL
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SHOP_EMAIL
+        value: thelocallayerprints3d@gmail.com
+    disk:
+      name: order-data
+      mountPath: /var/data
+      sizeGB: 5
