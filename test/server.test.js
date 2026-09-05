@@ -41,7 +41,7 @@ test("storefront, quote workflow, and authenticated admin workflow", async () =>
 
   const catalog = await json("/api/catalog");
   assert.equal(catalog.response.status, 200);
-  assert.equal(catalog.body.products.length, 6);
+  assert.equal(catalog.body.products.length, 9);
 
   const quote = await json("/api/quotes", {
     method: "POST",

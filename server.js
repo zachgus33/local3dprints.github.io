@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import express from "express";
 import Stripe from "stripe";
-import { SHOP, describeOptions, publicCatalog, validateCart } from "./lib/catalog.js";
+import { SHOP, describeOptions, describeStoredOptions, publicCatalog, validateCart } from "./lib/catalog.js";
 import {
   attachStripeSession,
   createOrder,
@@ -299,7 +299,7 @@ app.get("/api/admin/orders.csv", requireAdmin, (req, res) => {
   const header = ["Order", "Created", "Type", "Customer", "Email", "Phone", "Fulfillment", "Address", "Items", "Total", "Payment", "Status", "Notes"];
   const lines = [header.map(csvCell).join(",")];
   for (const order of rows) {
-    const items = order.items.map((item) => `${item.quantity}x ${item.name}${item.color ? ` (${item.color})` : ""}${item.details ? ` — ${item.details}` : ""}`).join(" | ");
+    const items = order.items.map((item) => `${item.quantity}x ${item.name}${describeStoredOptions(item) ? ` (${describeStoredOptions(item)})` : ""}${item.details ? ` — ${item.details}` : ""}`).join(" | ");
     lines.push([
       order.id, order.created_at, order.order_type, order.customer_name, order.customer_email,
       order.customer_phone, order.fulfillment, order.address, items,

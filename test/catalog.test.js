@@ -20,6 +20,18 @@ test("cart validation calculates totals without accepting a browser price", () =
   assert.equal(result.items[0].unitAmount, 1000);
 });
 
+test("Pac-Man clock keeps its server-owned price and named color choices", () => {
+  const result = validateCart([{
+    id: "pacman-clock",
+    qty: 1,
+    color: "Blue",
+    color2: "White"
+  }]);
+  assert.equal(result.subtotalCents, 2000);
+  assert.equal(result.items[0].colorLabel, "Line color");
+  assert.equal(result.items[0].color2Label, "Food color");
+});
+
 test("cart validation rejects unavailable configurations", () => {
   assert.throws(() => validateCart([{
     id: "stackable-glasses-stand",

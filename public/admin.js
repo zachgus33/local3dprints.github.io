@@ -155,9 +155,12 @@ function customerDetail(label, value, href = "") {
 }
 
 function itemOptions(item) {
+  const isPacmanClock = item.product_id === "pacman-clock";
+  const colorLabel = isPacmanClock ? "Line color" : "Color";
+  const color2Label = isPacmanClock ? "Food color" : "Line color";
   return [
-    item.color ? `Color: ${item.color}` : "",
-    item.color2 ? `Line color: ${item.color2}` : "",
+    item.color ? `${colorLabel}: ${item.color}` : "",
+    item.color2 ? `${color2Label}: ${item.color2}` : "",
     item.capacity ? `Size: ${item.capacity}` : "",
     item.details || ""
   ].filter(Boolean).join(" · ");
