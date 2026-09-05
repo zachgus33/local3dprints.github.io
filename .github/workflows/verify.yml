@@ -1,0 +1,27 @@
+name: Verify storefront
+
+on:
+  push:
+    branches: [thelocallayerv2]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.20.0
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Check JavaScript
+        run: npm run check
+      - name: Run tests
+        run: npm test
