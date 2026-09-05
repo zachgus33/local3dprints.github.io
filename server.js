@@ -437,7 +437,11 @@ app.delete("/api/admin/orders/:orderId", requireAdmin, async (req, res) => {
       if (session.status === "open") await stripe.checkout.sessions.expire(session.id);
     } catch (error) {
       console.error("Unable to safely close Stripe checkout before deleting order", error.message);
-      return res.status(502).json({ error: "Could not safely close the Stripe checkout. Try again in a moment." });
+      const alreadyAbandoned = order.status === "canceled"
+        || ["expired", "failed", "checkout_error"].includes(order.payment_status);
+      if (!alreadyAbandoned) {
+        return res.status(502).json({ error: "Could not safely close the Stripe checkout. Mark this unpaid order as Canceled, save it, and then delete it." });
+      }
     }
   }
 
